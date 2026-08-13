@@ -5,9 +5,8 @@
 
   <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
   <title>ABC Fruits - Cold Room</title>
 
@@ -247,7 +246,7 @@
 
 
   <!-- =====================================
-       CAPTURED SCREEN
+       CAPTURED PALLET
        ===================================== -->
 
   <div
@@ -311,7 +310,9 @@
 
     </div>
 
-    <!-- LOCATION WILL BE ADDED LATER -->
+
+    <!-- Location QR will be added
+         after pallet lookup is confirmed -->
 
     <button
       class="back-button"
@@ -347,11 +348,11 @@
 
 
 /************************************************
- * YOUR WORKING APPS SCRIPT WEB APP
+ * LATEST WORKING APPS SCRIPT WEB APP
  ************************************************/
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbyCTjHaU-7Md7FWXv1NxcTnJvt934LZ0c9KbyHyxEB92LERxjWzf1XcUBeRAX7fhImX/exec";
+  "https://script.google.com/macros/s/AKfycbwdsmCQzonGG9mVq_JmU0jOOHKnY2lbxxMOdWWie_J34s_2g3LMNjUKE_w3KOUUN7jD/exec";
 
 
 /************************************************
@@ -366,7 +367,7 @@ let palletData = null;
 
 
 /************************************************
- * START CAMERA
+ * START LIVE CAMERA
  ************************************************/
 
 function startScanner() {
@@ -407,7 +408,7 @@ function startScanner() {
     function(decodedText) {
 
       /*
-       * QR contains:
+       * Your QR contains only:
        *
        * PAL-000001
        */
@@ -420,16 +421,13 @@ function startScanner() {
 
       stopScanner();
 
-
       showCapturedPallet();
 
     },
 
     function(errorMessage) {
 
-      /*
-       * Ignore normal QR scanning messages.
-       */
+      // Ignore normal scanner messages.
 
     }
 
@@ -462,9 +460,7 @@ function stopScanner() {
       .then(function() {
 
         try {
-
           scanner.clear();
-
         } catch (e) {}
 
         scanner = null;
@@ -599,11 +595,7 @@ function showCapturedPallet() {
 
 
 /************************************************
- * GET PALLET FROM APPS SCRIPT
- *
- * Uses JSONP because GitHub Pages
- * cannot directly read normal Apps Script
- * responses because of browser CORS.
+ * GET PALLET
  ************************************************/
 
 function getPalletData() {
@@ -624,7 +616,7 @@ function getPalletData() {
 
 
   setMessage(
-    "🔍 Checking " +
+    "🔍 Checking pallet " +
     escapeHtml(
       selectedPalletId
     ) +
@@ -634,29 +626,39 @@ function getPalletData() {
 
 
   /*
-   * Create unique callback name
+   * Unique callback name
    */
 
   const callbackName =
-    "abcPallet_" +
+    "abcPalletCallback_" +
     Date.now();
 
 
   /*
-   * Create global callback
+   * Create JSONP callback
    */
+
+  let completed = false;
+
 
   window[callbackName] =
     function(data) {
 
+      if (completed) {
+        return;
+      }
+
+      completed = true;
+
+
       console.log(
-        "ABC Fruits API response:",
+        "ABC Fruits API:",
         data
       );
 
 
       /*
-       * API SUCCESS
+       * SUCCESS
        */
 
       if (
@@ -681,7 +683,7 @@ function getPalletData() {
 
 
       /*
-       * API ERROR
+       * API returned an error
        */
 
       setMessage(
@@ -708,7 +710,7 @@ function getPalletData() {
    * =========================================
    * IMPORTANT
    *
-   * Your Apps Script endpoint:
+   * Apps Script:
    *
    * /exec/pallet/PAL-000001
    *
@@ -731,15 +733,13 @@ function getPalletData() {
 
 
   console.log(
-    "Request URL:",
+    "ABC Fruits Request:",
     requestUrl
   );
 
 
   /*
-   * Create SCRIPT request.
-   *
-   * This is JSONP.
+   * JSONP script request
    */
 
   const script =
@@ -760,11 +760,18 @@ function getPalletData() {
 
 
   /*
-   * Network error
+   * Network failure
    */
 
   script.onerror =
     function() {
+
+      if (completed) {
+        return;
+      }
+
+      completed = true;
+
 
       setMessage(
         "❌ Apps Script request failed.",
@@ -798,6 +805,11 @@ function getPalletData() {
   setTimeout(
     function() {
 
+      if (completed) {
+        return;
+      }
+
+
       const existing =
         document.getElementById(
           callbackName
@@ -805,6 +817,9 @@ function getPalletData() {
 
 
       if (existing) {
+
+        completed = true;
+
 
         setMessage(
           "❌ Apps Script did not respond.",
@@ -836,9 +851,7 @@ function getPalletData() {
         callbackName
       ];
 
-    }
-
-    catch (e) {}
+    } catch (e) {}
 
 
     const oldScript =
@@ -862,9 +875,7 @@ function getPalletData() {
  * SHOW PALLET DETAILS
  ************************************************/
 
-function showPalletDetails(
-  data
-) {
+function showPalletDetails(data) {
 
   hideAllScreens();
 
@@ -1117,9 +1128,7 @@ function safe(value) {
 }
 
 
-function escapeHtml(
-  value
-) {
+function escapeHtml(value) {
 
   return String(value)
 
