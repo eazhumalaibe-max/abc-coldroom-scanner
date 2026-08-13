@@ -12,12 +12,12 @@
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
-      padding: 15px;
       margin: 0;
+      padding: 15px;
     }
 
     .card {
-      max-width: 500px;
+      max-width: 520px;
       margin: auto;
       background: white;
       padding: 20px;
@@ -86,53 +86,34 @@
 
   <h3>❄️ Cold Room Scanner</h3>
 
-  <button
-    class="scan"
-    onclick="startScanner()">
-
+  <button class="scan" onclick="startScanner()">
     📷 SCAN PALLET QR
-
   </button>
 
-  <div
-    id="reader"
-    class="hidden">
-  </div>
+  <div id="reader" class="hidden"></div>
 
   <button
     id="closeBtn"
     class="close hidden"
     onclick="stopScanner()">
-
     ✖ CLOSE CAMERA
-
   </button>
 
-  <div
-    id="result"
-    class="info">
-
+  <div id="result" class="info">
     Scan a pallet QR to view live stock.
-
   </div>
 
 </div>
 
-
 <script>
-
-/* YOUR APPS SCRIPT WEB APP URL */
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec";
 
-
 let scanner = null;
 
 
-/* =========================
-   START CAMERA
-========================= */
+/* START CAMERA */
 
 function startScanner() {
 
@@ -149,10 +130,8 @@ function startScanner() {
     .innerHTML =
       "📷 Opening camera...";
 
-
   scanner =
     new Html5Qrcode("reader");
-
 
   scanner.start(
 
@@ -167,7 +146,6 @@ function startScanner() {
         width: 250,
         height: 250
       }
-
     },
 
     function(decodedText) {
@@ -180,7 +158,7 @@ function startScanner() {
 
     function(errorMessage) {
 
-      // Ignore normal scanning errors
+      // Normal scanning errors ignored
 
     }
 
@@ -195,13 +173,10 @@ function startScanner() {
         "</span>";
 
   });
-
 }
 
 
-/* =========================
-   STOP CAMERA
-========================= */
+/* STOP CAMERA */
 
 function stopScanner() {
 
@@ -217,25 +192,19 @@ function stopScanner() {
       .catch(function() {});
 
     scanner = null;
-
   }
-
 
   document
     .getElementById("reader")
     .classList.add("hidden");
 
-
   document
     .getElementById("closeBtn")
     .classList.add("hidden");
-
 }
 
 
-/* =========================
-   GET PALLET FROM GOOGLE SHEET
-========================= */
+/* GET PALLET */
 
 function getPalletDetails(palletId) {
 
@@ -247,108 +216,96 @@ function getPalletDetails(palletId) {
       "</b>...";
 
 
-  /*
-    JSONP is used because this page
-    is hosted on GitHub Pages and
-    Apps Script is a different domain.
-  */
-
   const callbackName =
-    "abcPalletCallback_" +
+    "abcPallet_" +
     Date.now();
 
 
   window[callbackName] =
     function(result) {
 
-      try {
-
-        if (!result.ok) {
-
-          document
-            .getElementById("result")
-            .innerHTML =
-              '<span class="error">' +
-              "❌ " +
-              result.message +
-              "</span>";
-
-          return;
-
-        }
-
+      if (!result.ok) {
 
         document
           .getElementById("result")
           .innerHTML =
+            '<span class="error">' +
+            "❌ " +
+            result.message +
+            "</span>";
 
-          '<div class="success">' +
-          "✅ PALLET FOUND" +
-          "</div><br>" +
+        cleanup();
 
-          "<b>Pallet:</b> " +
-          result.palletId +
-          "<br>" +
-
-          "<b>Product:</b> " +
-          result.product +
-          "<br>" +
-
-          "<b>Batch:</b> " +
-          result.batchId +
-          "<br>" +
-
-          "<b>Box Weight:</b> " +
-          result.boxWeight +
-          " KG<br>" +
-
-          "<b>Current Boxes:</b> " +
-          result.currentBoxes +
-          "<br>" +
-
-          "<b>Current KG:</b> " +
-          result.currentKG +
-          " KG<br>" +
-
-          "<b>Room:</b> " +
-          result.currentRoom +
-          "<br>" +
-
-          "<b>Location:</b> " +
-          result.currentLocation +
-          "<br>" +
-
-          "<b>Status:</b> " +
-          result.status;
-
+        return;
       }
 
-      finally {
+
+      document
+        .getElementById("result")
+        .innerHTML =
+
+        '<span class="success">' +
+        "✅ PALLET FOUND" +
+        "</span><br><br>" +
+
+        "<b>Pallet:</b> " +
+        result.palletId +
+        "<br>" +
+
+        "<b>Product:</b> " +
+        result.product +
+        "<br>" +
+
+        "<b>Batch:</b> " +
+        result.batchId +
+        "<br>" +
+
+        "<b>Box Weight:</b> " +
+        result.boxWeight +
+        " KG<br>" +
+
+        "<b>Current Boxes:</b> " +
+        result.currentBoxes +
+        "<br>" +
+
+        "<b>Current KG:</b> " +
+        result.currentKG +
+        " KG<br>" +
+
+        "<b>Room:</b> " +
+        result.currentRoom +
+        "<br>" +
+
+        "<b>Location:</b> " +
+        result.currentLocation +
+        "<br>" +
+
+        "<b>Status:</b> " +
+        result.status;
+
+      cleanup();
+
+
+      function cleanup() {
 
         delete window[callbackName];
 
-        const script =
+        const oldScript =
           document.getElementById(
             callbackName
           );
 
-        if (script) {
-
-          script.remove();
-
+        if (oldScript) {
+          oldScript.remove();
         }
-
       }
-
     };
 
 
   const script =
     document.createElement("script");
 
-
-  script.id =
-    callbackName;
+  script.id = callbackName;
 
 
   script.src =
@@ -376,7 +333,6 @@ function getPalletDetails(palletId) {
   document
     .body
     .appendChild(script);
-
 }
 
 </script>
