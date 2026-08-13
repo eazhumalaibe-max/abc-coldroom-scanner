@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ABC Fruits QR Scanner</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      font-size: 17px;
+      border: none;
+      border-radius: 10px;
+      background: #111827;
+      color: white;
+    }
+
+    #reader {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h2>🍎 ABC Fruits</h2>
+
+  <h3>Cold Room QR Scanner</h3>
+
+  <button onclick="startScanner()">
+    📷 SCAN PALLET QR
+  </button>
+
+  <div id="reader"></div>
+
+  <div id="result">
+    Waiting for QR scan...
+  </div>
+
+</div>
+
+
+<script>
+
+let scanner = null;
+
+function startScanner() {
+
+  document.getElementById("result").innerHTML =
+    "Opening camera...";
+
+  scanner = new Html5Qrcode("reader");
+
+  scanner.start(
+
+    {
+      facingMode: "environment"
+    },
+
+    {
+      fps: 10,
+      qrbox: {
+        width: 250,
+        height: 250
+      }
+    },
+
+    function(decodedText) {
+
+      document.getElementById("result").innerHTML =
+        "✅ Scanned Pallet:<br><br>" +
+        decodedText;
+
+      scanner.stop();
+
+    },
+
+    function(errorMessage) {
+
+      // Ignore continuous scanning errors
+
+    }
+
+  ).catch(function(error) {
+
+    document.getElementById("result").innerHTML =
+      "❌ Camera Error:<br>" +
+      error;
+
+  });
+
+}
+
+</script>
+
+</body>
+</html>
