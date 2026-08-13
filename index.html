@@ -11,7 +11,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      background: #f3f4f6;
       margin: 0;
       padding: 15px;
     }
@@ -21,23 +21,22 @@
       margin: auto;
       background: white;
       padding: 20px;
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: 0 2px 12px #0002;
     }
 
-    h2, h3 {
+    h1, h2 {
       text-align: center;
     }
 
     button {
       width: 100%;
-      padding: 15px;
-      margin: 7px 0;
-      border: none;
+      padding: 16px;
+      margin: 8px 0;
+      border: 0;
       border-radius: 10px;
       font-size: 17px;
       font-weight: bold;
-      cursor: pointer;
     }
 
     .scan {
@@ -50,17 +49,19 @@
       color: white;
     }
 
-    .info {
+    .result {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 12px;
       background: #f1f5f9;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 15px;
       line-height: 1.8;
+      font-size: 16px;
     }
 
     .success {
       color: #047857;
       font-weight: bold;
+      font-size: 19px;
     }
 
     .error {
@@ -83,25 +84,27 @@
 
 <div class="card">
 
-  <h2>🍎 ABC Fruits</h2>
+  <h1>🍎 ABC Fruits</h1>
 
-  <h3>❄️ Cold Room Scanner</h3>
+  <h2>❄️ Cold Room Scanner</h2>
 
-  <button class="scan" onclick="startScanner()">
+  <button
+    class="scan"
+    onclick="startScanner()">
     📷 SCAN PALLET QR
   </button>
 
   <div id="reader" class="hidden"></div>
 
   <button
-    id="closeBtn"
+    id="closeButton"
     class="close hidden"
     onclick="stopScanner()">
     ✖ CLOSE CAMERA
   </button>
 
-  <div id="result" class="info">
-    Scan a pallet QR to view live stock.
+  <div id="result" class="result">
+    Scan a pallet QR.
   </div>
 
 </div>
@@ -109,10 +112,9 @@
 
 <script>
 
-/*
- * YOUR CURRENT GOOGLE APPS SCRIPT WEB APP
- * DO NOT CHANGE THIS URL
- */
+/************************************************
+ * GOOGLE APPS SCRIPT WEB APP
+ ************************************************/
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec";
@@ -121,9 +123,9 @@ const API_URL =
 let scanner = null;
 
 
-/* =========================================
-   START CAMERA
-========================================= */
+/************************************************
+ * START CAMERA
+ ************************************************/
 
 function startScanner() {
 
@@ -132,7 +134,7 @@ function startScanner() {
     .classList.remove("hidden");
 
   document
-    .getElementById("closeBtn")
+    .getElementById("closeButton")
     .classList.remove("hidden");
 
   document
@@ -164,13 +166,13 @@ function startScanner() {
 
       stopScanner();
 
-      getPalletDetails(decodedText);
+      getPallet(decodedText);
 
     },
 
-    function(errorMessage) {
+    function(error) {
 
-      // Normal QR scanning errors are ignored
+      // Normal QR scanning errors ignored
 
     }
 
@@ -180,7 +182,7 @@ function startScanner() {
       .getElementById("result")
       .innerHTML =
         '<span class="error">' +
-        "Camera error: " +
+        "❌ Camera error: " +
         error +
         "</span>";
 
@@ -189,9 +191,9 @@ function startScanner() {
 }
 
 
-/* =========================================
-   STOP CAMERA
-========================================= */
+/************************************************
+ * STOP CAMERA
+ ************************************************/
 
 function stopScanner() {
 
@@ -216,17 +218,16 @@ function stopScanner() {
 
 
   document
-    .getElementById("closeBtn")
+    .getElementById("closeButton")
     .classList.add("hidden");
-
 }
 
 
-/* =========================================
-   GET PALLET FROM GOOGLE SHEET
-========================================= */
+/************************************************
+ * GET PALLET
+ ************************************************/
 
-function getPalletDetails(palletId) {
+function getPallet(palletId) {
 
   palletId =
     String(palletId || "").trim();
@@ -235,81 +236,86 @@ function getPalletDetails(palletId) {
   document
     .getElementById("result")
     .innerHTML =
-      "🔍 Checking pallet <b>" +
+      "🔍 Checking <b>" +
       palletId +
       "</b>...";
 
 
   /*
-   * JSONP callback
+   * Create unique callback name
    */
 
   const callbackName =
-    "abcPalletCallback_" +
+    "abcPallet_" +
     Date.now();
 
 
+  /*
+   * Create callback function
+   */
+
   window[callbackName] =
-    function(result) {
+    function(data) {
 
-      /*
-       * Successful response
-       */
+      console.log(
+        "Apps Script response:",
+        data
+      );
 
-      if (result && result.ok) {
+
+      if (
+        data &&
+        data.ok === true
+      ) {
 
         document
           .getElementById("result")
           .innerHTML =
 
-          '<span class="success">' +
+          '<div class="success">' +
           "✅ PALLET FOUND" +
-          "</span><br><br>" +
+          "</div>" +
 
           "<b>Pallet:</b> " +
-          safe(result.palletId) +
+          show(data.palletId) +
           "<br>" +
 
           "<b>Product:</b> " +
-          safe(result.product) +
+          show(data.product) +
           "<br>" +
 
           "<b>Batch:</b> " +
-          safe(result.batchId) +
+          show(data.batchId) +
           "<br>" +
 
           "<b>Box Weight:</b> " +
-          safe(result.boxWeight) +
+          show(data.boxWeight) +
           " KG<br>" +
 
           "<b>Original Boxes:</b> " +
-          safe(result.originalBoxes) +
+          show(data.originalBoxes) +
           "<br>" +
 
           "<b>Current Boxes:</b> " +
-          safe(result.currentBoxes) +
+          show(data.currentBoxes) +
           "<br>" +
 
           "<b>Current KG:</b> " +
-          safe(result.currentKG) +
+          show(data.currentKG) +
           " KG<br>" +
 
           "<b>Room:</b> " +
-          safe(result.currentRoom) +
+          show(data.currentRoom) +
           "<br>" +
 
           "<b>Location:</b> " +
-          safe(result.currentLocation) +
+          show(data.currentLocation) +
           "<br>" +
 
           "<b>Status:</b> " +
-          safe(result.status);
+          show(data.status);
 
       }
-
-      /*
-       * Pallet not found
-       */
 
       else {
 
@@ -319,9 +325,9 @@ function getPalletDetails(palletId) {
 
           '<span class="error">' +
           "❌ " +
-          safe(
-            result
-              ? result.message
+          show(
+            data && data.message
+              ? data.message
               : "Pallet not found"
           ) +
           "</span>";
@@ -329,13 +335,15 @@ function getPalletDetails(palletId) {
       }
 
 
-      removeCallback(callbackName);
+      cleanup();
 
     };
 
 
   /*
-   * Create script request
+   * Create script element
+   *
+   * This is JSONP.
    */
 
   const script =
@@ -352,11 +360,13 @@ function getPalletDetails(palletId) {
     "&palletId=" +
     encodeURIComponent(palletId) +
     "&callback=" +
-    callbackName;
+    callbackName +
+    "&v=" +
+    Date.now();
 
 
   /*
-   * Connection error
+   * If browser cannot load Apps Script
    */
 
   script.onerror =
@@ -372,12 +382,12 @@ function getPalletDetails(palletId) {
 
         "<br><br>" +
 
-        "Please check Apps Script deployment." +
+        "Apps Script request failed."
 
-        "</span>";
+        + "</span>";
 
 
-      removeCallback(callbackName);
+      cleanup();
 
     };
 
@@ -388,73 +398,65 @@ function getPalletDetails(palletId) {
 
 
   /*
-   * Timeout protection
+   * Timeout
    */
 
-  setTimeout(
-    function() {
+  setTimeout(function() {
 
-      if (
-        document.getElementById(
-          callbackName
-        )
-      ) {
+    if (
+      document.getElementById(
+        callbackName
+      )
+    ) {
 
-        document
-          .getElementById("result")
-          .innerHTML =
+      document
+        .getElementById("result")
+        .innerHTML =
 
-          '<span class="error">' +
+        '<span class="error">' +
 
-          "❌ Google Sheet response timeout." +
+        "❌ No response from Google Sheet."
 
-          "</span>";
+        + "</span>";
 
+      cleanup();
 
-        removeCallback(
-          callbackName
-        );
+    }
 
-      }
-
-    },
-    15000
-  );
-
-}
+  }, 15000);
 
 
-/* =========================================
-   REMOVE CALLBACK
-========================================= */
+  function cleanup() {
 
-function removeCallback(name) {
+    try {
 
-  try {
+      delete window[callbackName];
 
-    delete window[name];
-
-  } catch (e) {}
+    } catch (e) {}
 
 
-  const script =
-    document.getElementById(name);
+    const oldScript =
+      document.getElementById(
+        callbackName
+      );
 
 
-  if (script) {
+    if (oldScript) {
 
-    script.remove();
+      oldScript.remove();
+
+    }
 
   }
 
 }
 
 
-/* =========================================
-   SAFE DISPLAY
-========================================= */
+/************************************************
+ * SAFE DISPLAY
+ ************************************************/
 
-function safe(value) {
+function show(value) {
 
   if (
     value === null ||
@@ -463,7 +465,6 @@ function safe(value) {
   ) {
 
     return "-";
-
   }
 
 
@@ -473,7 +474,6 @@ function safe(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
 }
 
 </script>
