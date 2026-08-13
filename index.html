@@ -5,12 +5,13 @@
 
   <meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
   <title>ABC Fruits - Cold Room</title>
 
-  <!-- QR Scanner -->
+  <!-- QR Scanner Library -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
@@ -29,7 +30,7 @@
     .card {
       width: 100%;
       max-width: 540px;
-      margin: auto;
+      margin: 0 auto;
       background: #ffffff;
       padding: 20px;
       border-radius: 18px;
@@ -64,33 +65,42 @@
       cursor: pointer;
     }
 
+    button:active {
+      transform: scale(0.99);
+    }
+
     .scan-button {
       background: #111827;
-      color: white;
+      color: #ffffff;
     }
 
     .type-button {
       background: #2563eb;
-      color: white;
+      color: #ffffff;
     }
 
-    .check-button {
+    .verify-button {
       background: #059669;
-      color: white;
+      color: #ffffff;
+    }
+
+    .location-button {
+      background: #7c3aed;
+      color: #ffffff;
     }
 
     .back-button {
       background: #6b7280;
-      color: white;
+      color: #ffffff;
     }
 
     input {
       width: 100%;
       padding: 15px;
+      margin-top: 10px;
       border: 1px solid #cbd5e1;
       border-radius: 10px;
       font-size: 18px;
-      margin-top: 10px;
       outline: none;
     }
 
@@ -98,7 +108,8 @@
       border-color: #2563eb;
     }
 
-    #reader {
+    #reader,
+    #locationReader {
       width: 100%;
       margin-top: 15px;
       overflow: hidden;
@@ -149,28 +160,32 @@
 
 <body>
 
+
 <div class="card">
 
-  <!-- =====================================
+
+  <!-- =========================================
        HEADER
-       ===================================== -->
+       ========================================= -->
 
   <h1>🍎 ABC Fruits</h1>
 
   <h2>❄️ Cold Room</h2>
 
 
-  <!-- =====================================
-       METHOD SCREEN
-       ===================================== -->
+  <!-- =========================================
+       STEP 1
+       PALLET ENTRY METHOD
+       ========================================= -->
 
   <div id="methodScreen">
 
     <h3>Select Pallet Entry Method</h3>
 
+
     <button
       class="scan-button"
-      onclick="startScanner()">
+      onclick="startPalletScanner()">
 
       📷 SCAN PALLET QR
 
@@ -188,19 +203,23 @@
   </div>
 
 
-  <!-- =====================================
-       CAMERA SCREEN
-       ===================================== -->
+  <!-- =========================================
+       STEP 2
+       PALLET CAMERA
+       ========================================= -->
 
   <div
-    id="cameraScreen"
+    id="palletCameraScreen"
     class="hidden">
+
+    <h3>📷 Scan Pallet QR</h3>
 
     <div id="reader"></div>
 
+
     <button
       class="back-button"
-      onclick="stopScanner()">
+      onclick="stopPalletScanner()">
 
       ✖ CLOSE CAMERA
 
@@ -209,15 +228,17 @@
   </div>
 
 
-  <!-- =====================================
-       TYPE SCREEN
-       ===================================== -->
+  <!-- =========================================
+       STEP 3
+       TYPE PALLET ID
+       ========================================= -->
 
   <div
     id="typeScreen"
     class="hidden">
 
     <h3>Enter Pallet ID</h3>
+
 
     <input
       id="palletInput"
@@ -226,13 +247,15 @@
       autocomplete="off"
       autocapitalize="characters">
 
+
     <button
-      class="check-button"
+      class="verify-button"
       onclick="submitTypedPallet()">
 
-      🔍 CHECK PALLET
+      🔍 VERIFY PALLET
 
     </button>
+
 
     <button
       class="back-button"
@@ -245,63 +268,33 @@
   </div>
 
 
-  <!-- =====================================
-       CAPTURED PALLET
-       ===================================== -->
+  <!-- =========================================
+       STEP 4
+       PALLET VERIFIED
+       ========================================= -->
 
   <div
-    id="capturedScreen"
+    id="palletVerifiedScreen"
     class="hidden">
 
     <div class="result">
 
       <div class="success">
-        ✅ PALLET ID CAPTURED
+        ✅ PALLET ID VERIFIED SUCCESSFULLY
       </div>
+
 
       <br>
 
-      <span class="label">
-        Pallet ID:
-      </span>
 
-      <span id="capturedPallet">
-      </span>
+      <div>
+        <span class="label">
+          Pallet ID:
+        </span>
 
-    </div>
-
-    <button
-      class="check-button"
-      onclick="getPalletData()">
-
-      🔍 CHECK PALLET
-
-    </button>
-
-    <button
-      class="back-button"
-      onclick="goHome()">
-
-      ← BACK
-
-    </button>
-
-  </div>
-
-
-  <!-- =====================================
-       PALLET DETAILS
-       ===================================== -->
-
-  <div
-    id="detailsScreen"
-    class="hidden">
-
-    <div class="result">
-
-      <div class="success">
-        ✅ PALLET FOUND
+        <span id="verifiedPalletId"></span>
       </div>
+
 
       <div
         id="palletDetails"
@@ -311,8 +304,14 @@
     </div>
 
 
-    <!-- Location QR will be added
-         after pallet lookup is confirmed -->
+    <button
+      class="location-button"
+      onclick="startLocationScanner()">
+
+      📍 SCAN LOCATION QR
+
+    </button>
+
 
     <button
       class="back-button"
@@ -325,9 +324,70 @@
   </div>
 
 
-  <!-- =====================================
+  <!-- =========================================
+       STEP 5
+       LOCATION CAMERA
+       ========================================= -->
+
+  <div
+    id="locationCameraScreen"
+    class="hidden">
+
+    <h3>📍 Scan Location QR</h3>
+
+
+    <div id="locationReader"></div>
+
+
+    <button
+      class="back-button"
+      onclick="stopLocationScanner()">
+
+      ✖ CLOSE CAMERA
+
+    </button>
+
+  </div>
+
+
+  <!-- =========================================
+       STEP 6
+       LOCATION SUCCESS
+       ========================================= -->
+
+  <div
+    id="locationSuccessScreen"
+    class="hidden">
+
+    <div class="result">
+
+      <div class="success">
+        ✅ LOCATION UPDATED SUCCESSFULLY
+      </div>
+
+
+      <div
+        id="locationDetails"
+        class="details">
+      </div>
+
+    </div>
+
+
+    <button
+      class="scan-button"
+      onclick="goHome()">
+
+      ✔ DONE
+
+    </button>
+
+  </div>
+
+
+  <!-- =========================================
        MESSAGE
-       ===================================== -->
+       ========================================= -->
 
   <div
     id="message"
@@ -337,18 +397,26 @@
 
   </div>
 
+
 </div>
 
 
 <script>
 
+
 /************************************************
- * ABC FRUITS PALLET SCANNER
+ * ABC FRUITS COLD ROOM SCANNER
  ************************************************/
 
 
 /************************************************
- * LATEST WORKING APPS SCRIPT WEB APP
+ * IMPORTANT
+ *
+ * PUT YOUR LATEST /exec URL HERE
+ *
+ * Example:
+ *
+ * https://script.google.com/macros/s/XXXXX/exec
  ************************************************/
 
 const API_URL =
@@ -359,7 +427,9 @@ const API_URL =
  * VARIABLES
  ************************************************/
 
-let scanner = null;
+let palletScanner = null;
+
+let locationScanner = null;
 
 let selectedPalletId = "";
 
@@ -367,29 +437,36 @@ let palletData = null;
 
 
 /************************************************
- * START LIVE CAMERA
+ * START PALLET CAMERA
  ************************************************/
 
-function startScanner() {
+function startPalletScanner() {
 
   hideAllScreens();
 
+
   document
-    .getElementById("cameraScreen")
-    .classList.remove("hidden");
+    .getElementById(
+      "palletCameraScreen"
+    )
+    .classList.remove(
+      "hidden"
+    );
 
 
   setMessage(
-    "📷 Opening live camera...",
+    "📷 Opening live pallet camera...",
     "info"
   );
 
 
-  scanner =
-    new Html5Qrcode("reader");
+  palletScanner =
+    new Html5Qrcode(
+      "reader"
+    );
 
 
-  scanner.start(
+  palletScanner.start(
 
     {
       facingMode: "environment"
@@ -408,7 +485,7 @@ function startScanner() {
     function(decodedText) {
 
       /*
-       * Your QR contains only:
+       * Your pallet QR contains
        *
        * PAL-000001
        */
@@ -419,15 +496,22 @@ function startScanner() {
           .toUpperCase();
 
 
-      stopScanner();
+      stopPalletScanner();
 
-      showCapturedPallet();
+
+      /*
+       * Automatically verify
+       */
+
+      verifyPallet();
 
     },
 
     function(errorMessage) {
 
-      // Ignore normal scanner messages.
+      /*
+       * Ignore normal scanner messages.
+       */
 
     }
 
@@ -436,7 +520,7 @@ function startScanner() {
   .catch(function(error) {
 
     setMessage(
-      "❌ Camera error: " +
+      "❌ Pallet camera error: " +
       String(error),
       "error"
     );
@@ -447,56 +531,80 @@ function startScanner() {
 
 
 /************************************************
- * STOP CAMERA
+ * STOP PALLET CAMERA
  ************************************************/
 
-function stopScanner() {
+function stopPalletScanner() {
 
-  if (scanner) {
+  if (!palletScanner) {
 
-    scanner
-      .stop()
+    document
+      .getElementById(
+        "palletCameraScreen"
+      )
+      .classList.add(
+        "hidden"
+      );
 
-      .then(function() {
-
-        try {
-          scanner.clear();
-        } catch (e) {}
-
-        scanner = null;
-
-      })
-
-      .catch(function() {
-
-        scanner = null;
-
-      });
+    return;
 
   }
 
 
+  palletScanner
+    .stop()
+
+    .then(function() {
+
+      try {
+
+        palletScanner.clear();
+
+      }
+
+      catch (e) {}
+
+      palletScanner = null;
+
+    })
+
+    .catch(function() {
+
+      palletScanner = null;
+
+    });
+
+
   document
-    .getElementById("cameraScreen")
-    .classList.add("hidden");
+    .getElementById(
+      "palletCameraScreen"
+    )
+    .classList.add(
+      "hidden"
+    );
 
 }
 
 
 /************************************************
- * OPEN TYPE SCREEN
+ * OPEN TYPE PALLET
  ************************************************/
 
 function openTypeScreen() {
 
-  stopScanner();
+  stopPalletScanner();
+
 
   hideAllScreens();
 
 
   document
-    .getElementById("typeScreen")
-    .classList.remove("hidden");
+    .getElementById(
+      "typeScreen"
+    )
+    .classList.remove(
+      "hidden"
+    );
 
 
   const input =
@@ -524,7 +632,7 @@ function openTypeScreen() {
 
 
 /************************************************
- * TYPE PALLET
+ * SUBMIT TYPED PALLET
  ************************************************/
 
 function submitTypedPallet() {
@@ -555,50 +663,20 @@ function submitTypedPallet() {
     value;
 
 
-  showCapturedPallet();
+  /*
+   * Automatically verify
+   */
+
+  verifyPallet();
 
 }
 
 
 /************************************************
- * SHOW CAPTURED PALLET
+ * VERIFY PALLET
  ************************************************/
 
-function showCapturedPallet() {
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "capturedScreen"
-    )
-    .classList.remove(
-      "hidden"
-    );
-
-
-  document
-    .getElementById(
-      "capturedPallet"
-    )
-    .innerText =
-      selectedPalletId;
-
-
-  setMessage(
-    "Pallet ID captured successfully.",
-    "info"
-  );
-
-}
-
-
-/************************************************
- * GET PALLET
- ************************************************/
-
-function getPalletData() {
+function verifyPallet() {
 
   if (!selectedPalletId) {
 
@@ -616,7 +694,7 @@ function getPalletData() {
 
 
   setMessage(
-    "🔍 Checking pallet " +
+    "🔍 Checking Pallet ID " +
     escapeHtml(
       selectedPalletId
     ) +
@@ -626,20 +704,20 @@ function getPalletData() {
 
 
   /*
-   * Unique callback name
+   * Unique JSONP callback
    */
 
   const callbackName =
-    "abcPalletCallback_" +
+    "abcPalletVerify_" +
     Date.now();
 
 
-  /*
-   * Create JSONP callback
-   */
-
   let completed = false;
 
+
+  /*
+   * JSONP callback
+   */
 
   window[callbackName] =
     function(data) {
@@ -648,17 +726,18 @@ function getPalletData() {
         return;
       }
 
+
       completed = true;
 
 
       console.log(
-        "ABC Fruits API:",
+        "ABC Fruits Pallet Response:",
         data
       );
 
 
       /*
-       * SUCCESS
+       * PALLET FOUND
        */
 
       if (
@@ -670,12 +749,11 @@ function getPalletData() {
           data;
 
 
-        showPalletDetails(
-          data
-        );
+        showPalletVerified();
 
 
         cleanup();
+
 
         return;
 
@@ -683,7 +761,7 @@ function getPalletData() {
 
 
       /*
-       * API returned an error
+       * PALLET NOT FOUND
        */
 
       setMessage(
@@ -698,7 +776,7 @@ function getPalletData() {
       );
 
 
-      showCapturedPallet();
+      showMethodScreen();
 
 
       cleanup();
@@ -707,17 +785,11 @@ function getPalletData() {
 
 
   /*
-   * =========================================
-   * IMPORTANT
+   * Request:
    *
-   * Apps Script:
-   *
-   * /exec/pallet/PAL-000001
-   *
-   * JSONP:
+   * /pallet/PAL-000001
    *
    * ?prefix=callback
-   * =========================================
    */
 
   const requestUrl =
@@ -733,13 +805,13 @@ function getPalletData() {
 
 
   console.log(
-    "ABC Fruits Request:",
+    "Pallet Request:",
     requestUrl
   );
 
 
   /*
-   * JSONP script request
+   * JSONP script
    */
 
   const script =
@@ -760,7 +832,7 @@ function getPalletData() {
 
 
   /*
-   * Network failure
+   * Request failed
    */
 
   script.onerror =
@@ -770,16 +842,484 @@ function getPalletData() {
         return;
       }
 
+
       completed = true;
 
 
       setMessage(
-        "❌ Apps Script request failed.",
+        "❌ Pallet API request failed.",
         "error"
       );
 
 
-      showCapturedPallet();
+      showMethodScreen();
+
+
+      cleanup();
+
+    };
+
+
+  document
+    .body
+    .appendChild(
+      script
+    );
+
+
+  /*
+   * 15 second timeout
+   */
+
+  setTimeout(
+    function() {
+
+      if (completed) {
+        return;
+      }
+
+
+      const existing =
+        document.getElementById(
+          callbackName
+        );
+
+
+      if (existing) {
+
+        completed = true;
+
+
+        setMessage(
+          "❌ Pallet API timeout.",
+          "error"
+        );
+
+
+        showMethodScreen();
+
+
+        cleanup();
+
+      }
+
+    },
+    15000
+  );
+
+
+  /*
+   * Cleanup
+   */
+
+  function cleanup() {
+
+    try {
+
+      delete window[
+        callbackName
+      ];
+
+    }
+
+    catch (e) {}
+
+
+    const oldScript =
+      document.getElementById(
+        callbackName
+      );
+
+
+    if (oldScript) {
+
+      oldScript.remove();
+
+    }
+
+  }
+
+}
+
+
+/************************************************
+ * SHOW PALLET VERIFIED
+ ************************************************/
+
+function showPalletVerified() {
+
+  hideAllScreens();
+
+
+  document
+    .getElementById(
+      "palletVerifiedScreen"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "verifiedPalletId"
+    )
+    .innerText =
+      palletData.palletId;
+
+
+  document
+    .getElementById(
+      "palletDetails"
+    )
+    .innerHTML =
+
+      "<b>Batch ID:</b> " +
+      safe(
+        palletData.batchId
+      ) +
+
+      "<br>" +
+
+      "<b>Product:</b> " +
+      safe(
+        palletData.product
+      ) +
+
+      "<br>" +
+
+      "<b>Production Date:</b> " +
+      safe(
+        palletData.productionDate
+      ) +
+
+      "<br>" +
+
+      "<b>Box Weight:</b> " +
+      safe(
+        palletData.boxWeightKG
+      ) +
+      " KG" +
+
+      "<br>" +
+
+      "<b>Original Boxes:</b> " +
+      safe(
+        palletData.originalBoxes
+      ) +
+
+      "<br>" +
+
+      "<b>Current Boxes:</b> " +
+      safe(
+        palletData.currentBoxes
+      ) +
+
+      "<br>" +
+
+      "<b>Current KG:</b> " +
+      safe(
+        palletData.currentKG
+      ) +
+      " KG" +
+
+      "<br>" +
+
+      "<b>Current Room:</b> " +
+      safe(
+        palletData.currentRoom ||
+        "-"
+      ) +
+
+      "<br>" +
+
+      "<b>Current Location:</b> " +
+      safe(
+        palletData.currentLocation ||
+        "-"
+      ) +
+
+      "<br>" +
+
+      "<b>Status:</b> " +
+      safe(
+        palletData.status
+      );
+
+
+  setMessage(
+    "✅ Pallet ID verified successfully. Scan Location QR.",
+    "success"
+  );
+
+}
+
+
+/************************************************
+ * START LOCATION CAMERA
+ ************************************************/
+
+function startLocationScanner() {
+
+  hideAllScreens();
+
+
+  document
+    .getElementById(
+      "locationCameraScreen"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+
+  setMessage(
+    "📍 Opening live location camera...",
+    "info"
+  );
+
+
+  locationScanner =
+    new Html5Qrcode(
+      "locationReader"
+    );
+
+
+  locationScanner.start(
+
+    {
+      facingMode: "environment"
+    },
+
+    {
+      fps: 10,
+
+      qrbox: {
+        width: 250,
+        height: 250
+      }
+
+    },
+
+    function(decodedText) {
+
+      /*
+       * Example location QR:
+       *
+       * CR01-A01-01
+       */
+
+      const locationId =
+        String(decodedText)
+          .trim()
+          .toUpperCase();
+
+
+      stopLocationScanner();
+
+
+      updatePalletLocation(
+        locationId
+      );
+
+    },
+
+    function(errorMessage) {
+
+      /*
+       * Ignore normal scanner messages.
+       */
+
+    }
+
+  )
+
+  .catch(function(error) {
+
+    setMessage(
+      "❌ Location camera error: " +
+      String(error),
+      "error"
+    );
+
+  });
+
+}
+
+
+/************************************************
+ * STOP LOCATION CAMERA
+ ************************************************/
+
+function stopLocationScanner() {
+
+  if (!locationScanner) {
+
+    document
+      .getElementById(
+        "locationCameraScreen"
+      )
+      .classList.add(
+        "hidden"
+      );
+
+    return;
+
+  }
+
+
+  locationScanner
+    .stop()
+
+    .then(function() {
+
+      try {
+
+        locationScanner.clear();
+
+      }
+
+      catch (e) {}
+
+      locationScanner = null;
+
+    })
+
+    .catch(function() {
+
+      locationScanner = null;
+
+    });
+
+
+  document
+    .getElementById(
+      "locationCameraScreen"
+    )
+    .classList.add(
+      "hidden"
+    );
+
+}
+
+
+/************************************************
+ * UPDATE PALLET LOCATION
+ ************************************************/
+
+function updatePalletLocation(
+  locationId
+) {
+
+  if (!selectedPalletId) {
+
+    setMessage(
+      "❌ Pallet ID missing.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (!locationId) {
+
+    setMessage(
+      "❌ Location QR is empty.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  hideAllScreens();
+
+
+  setMessage(
+    "💾 Saving location " +
+    escapeHtml(
+      locationId
+    ) +
+    "...",
+    "info"
+  );
+
+
+  /*
+   * Unique callback
+   */
+
+  const callbackName =
+    "abcLocationUpdate_" +
+    Date.now();
+
+
+  let completed = false;
+
+
+  /*
+   * JSONP callback
+   */
+
+  window[callbackName] =
+    function(data) {
+
+      if (completed) {
+        return;
+      }
+
+
+      completed = true;
+
+
+      console.log(
+        "ABC Fruits Location Response:",
+        data
+      );
+
+
+      /*
+       * SUCCESS
+       */
+
+      if (
+        data &&
+        data.ok === true
+      ) {
+
+        showLocationSuccess(
+          data
+        );
+
+
+        cleanup();
+
+
+        return;
+
+      }
+
+
+      /*
+       * ERROR
+       */
+
+      setMessage(
+        "❌ " +
+        (
+          data &&
+          data.message
+            ? data.message
+            : "Location update failed."
+        ),
+        "error"
+      );
+
+
+      showPalletVerified();
 
 
       cleanup();
@@ -788,8 +1328,82 @@ function getPalletData() {
 
 
   /*
-   * Add request to page
+   * Request:
+   *
+   * /setPallet/PAL-000001/location/CR01-A01-01
    */
+
+  const requestUrl =
+    API_URL +
+    "/setPallet/" +
+    encodeURIComponent(
+      selectedPalletId
+    ) +
+    "/location/" +
+    encodeURIComponent(
+      locationId
+    ) +
+    "?prefix=" +
+    encodeURIComponent(
+      callbackName
+    );
+
+
+  console.log(
+    "Location Request:",
+    requestUrl
+  );
+
+
+  /*
+   * JSONP script
+   */
+
+  const script =
+    document.createElement(
+      "script"
+    );
+
+
+  script.id =
+    callbackName;
+
+
+  script.src =
+    requestUrl;
+
+
+  script.async = true;
+
+
+  /*
+   * Request failed
+   */
+
+  script.onerror =
+    function() {
+
+      if (completed) {
+        return;
+      }
+
+
+      completed = true;
+
+
+      setMessage(
+        "❌ Location API request failed.",
+        "error"
+      );
+
+
+      showPalletVerified();
+
+
+      cleanup();
+
+    };
+
 
   document
     .body
@@ -822,12 +1436,12 @@ function getPalletData() {
 
 
         setMessage(
-          "❌ Apps Script did not respond.",
+          "❌ Location API timeout.",
           "error"
         );
 
 
-        showCapturedPallet();
+        showPalletVerified();
 
 
         cleanup();
@@ -851,7 +1465,9 @@ function getPalletData() {
         callbackName
       ];
 
-    } catch (e) {}
+    }
+
+    catch (e) {}
 
 
     const oldScript =
@@ -872,17 +1488,19 @@ function getPalletData() {
 
 
 /************************************************
- * SHOW PALLET DETAILS
+ * LOCATION SUCCESS
  ************************************************/
 
-function showPalletDetails(data) {
+function showLocationSuccess(
+  data
+) {
 
   hideAllScreens();
 
 
   document
     .getElementById(
-      "detailsScreen"
+      "locationSuccessScreen"
     )
     .classList.remove(
       "hidden"
@@ -891,72 +1509,39 @@ function showPalletDetails(data) {
 
   document
     .getElementById(
-      "palletDetails"
+      "locationDetails"
     )
     .innerHTML =
 
       "<b>Pallet ID:</b> " +
-      safe(data.palletId) +
+      safe(
+        data.palletId
+      ) +
 
       "<br>" +
 
-      "<b>Batch ID:</b> " +
-      safe(data.batchId) +
-
-      "<br>" +
-
-      "<b>Product:</b> " +
-      safe(data.product) +
-
-      "<br>" +
-
-      "<b>Production Date:</b> " +
-      safe(data.productionDate) +
-
-      "<br>" +
-
-      "<b>Box Weight:</b> " +
-      safe(data.boxWeightKG) +
-      " KG" +
-
-      "<br>" +
-
-      "<b>Original Boxes:</b> " +
-      safe(data.originalBoxes) +
-
-      "<br>" +
-
-      "<b>Current Boxes:</b> " +
-      safe(data.currentBoxes) +
-
-      "<br>" +
-
-      "<b>Current KG:</b> " +
-      safe(data.currentKG) +
-      " KG" +
+      "<b>Location QR:</b> " +
+      safe(
+        data.locationId
+      ) +
 
       "<br>" +
 
       "<b>Current Room:</b> " +
       safe(
-        data.currentRoom || "-"
+        data.currentRoom
       ) +
 
       "<br>" +
 
       "<b>Current Location:</b> " +
       safe(
-        data.currentLocation || "-"
-      ) +
-
-      "<br>" +
-
-      "<b>Status:</b> " +
-      safe(data.status);
+        data.currentLocation
+      );
 
 
   setMessage(
-    "✅ Pallet data loaded successfully.",
+    "✅ Location saved successfully.",
     "success"
   );
 
@@ -969,7 +1554,9 @@ function showPalletDetails(data) {
 
 function goHome() {
 
-  stopScanner();
+  stopPalletScanner();
+
+  stopLocationScanner();
 
 
   selectedPalletId = "";
@@ -998,6 +1585,26 @@ function goHome() {
 
 
 /************************************************
+ * SHOW METHOD SCREEN
+ ************************************************/
+
+function showMethodScreen() {
+
+  hideAllScreens();
+
+
+  document
+    .getElementById(
+      "methodScreen"
+    )
+    .classList.remove(
+      "hidden"
+    );
+
+}
+
+
+/************************************************
  * HIDE ALL SCREENS
  ************************************************/
 
@@ -1014,7 +1621,7 @@ function hideAllScreens() {
 
   document
     .getElementById(
-      "cameraScreen"
+      "palletCameraScreen"
     )
     .classList.add(
       "hidden"
@@ -1032,7 +1639,7 @@ function hideAllScreens() {
 
   document
     .getElementById(
-      "capturedScreen"
+      "palletVerifiedScreen"
     )
     .classList.add(
       "hidden"
@@ -1041,7 +1648,16 @@ function hideAllScreens() {
 
   document
     .getElementById(
-      "detailsScreen"
+      "locationCameraScreen"
+    )
+    .classList.add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "locationSuccessScreen"
     )
     .classList.add(
       "hidden"
@@ -1128,7 +1744,9 @@ function safe(value) {
 }
 
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   return String(value)
 
