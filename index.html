@@ -37,6 +37,7 @@
       border-radius: 10px;
       font-size: 17px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .scan {
@@ -105,15 +106,24 @@
 
 </div>
 
+
 <script>
+
+/*
+ * YOUR CURRENT GOOGLE APPS SCRIPT WEB APP
+ * DO NOT CHANGE THIS URL
+ */
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec";
 
+
 let scanner = null;
 
 
-/* START CAMERA */
+/* =========================================
+   START CAMERA
+========================================= */
 
 function startScanner() {
 
@@ -130,8 +140,10 @@ function startScanner() {
     .innerHTML =
       "📷 Opening camera...";
 
+
   scanner =
     new Html5Qrcode("reader");
+
 
   scanner.start(
 
@@ -158,7 +170,7 @@ function startScanner() {
 
     function(errorMessage) {
 
-      // Normal scanning errors ignored
+      // Normal QR scanning errors are ignored
 
     }
 
@@ -173,10 +185,13 @@ function startScanner() {
         "</span>";
 
   });
+
 }
 
 
-/* STOP CAMERA */
+/* =========================================
+   STOP CAMERA
+========================================= */
 
 function stopScanner() {
 
@@ -194,19 +209,28 @@ function stopScanner() {
     scanner = null;
   }
 
+
   document
     .getElementById("reader")
     .classList.add("hidden");
 
+
   document
     .getElementById("closeBtn")
     .classList.add("hidden");
+
 }
 
 
-/* GET PALLET */
+/* =========================================
+   GET PALLET FROM GOOGLE SHEET
+========================================= */
 
 function getPalletDetails(palletId) {
+
+  palletId =
+    String(palletId || "").trim();
+
 
   document
     .getElementById("result")
@@ -216,96 +240,110 @@ function getPalletDetails(palletId) {
       "</b>...";
 
 
+  /*
+   * JSONP callback
+   */
+
   const callbackName =
-    "abcPallet_" +
+    "abcPalletCallback_" +
     Date.now();
 
 
   window[callbackName] =
     function(result) {
 
-      if (!result.ok) {
+      /*
+       * Successful response
+       */
+
+      if (result && result.ok) {
 
         document
           .getElementById("result")
           .innerHTML =
-            '<span class="error">' +
-            "❌ " +
-            result.message +
-            "</span>";
 
-        cleanup();
+          '<span class="success">' +
+          "✅ PALLET FOUND" +
+          "</span><br><br>" +
 
-        return;
+          "<b>Pallet:</b> " +
+          safe(result.palletId) +
+          "<br>" +
+
+          "<b>Product:</b> " +
+          safe(result.product) +
+          "<br>" +
+
+          "<b>Batch:</b> " +
+          safe(result.batchId) +
+          "<br>" +
+
+          "<b>Box Weight:</b> " +
+          safe(result.boxWeight) +
+          " KG<br>" +
+
+          "<b>Original Boxes:</b> " +
+          safe(result.originalBoxes) +
+          "<br>" +
+
+          "<b>Current Boxes:</b> " +
+          safe(result.currentBoxes) +
+          "<br>" +
+
+          "<b>Current KG:</b> " +
+          safe(result.currentKG) +
+          " KG<br>" +
+
+          "<b>Room:</b> " +
+          safe(result.currentRoom) +
+          "<br>" +
+
+          "<b>Location:</b> " +
+          safe(result.currentLocation) +
+          "<br>" +
+
+          "<b>Status:</b> " +
+          safe(result.status);
+
+      }
+
+      /*
+       * Pallet not found
+       */
+
+      else {
+
+        document
+          .getElementById("result")
+          .innerHTML =
+
+          '<span class="error">' +
+          "❌ " +
+          safe(
+            result
+              ? result.message
+              : "Pallet not found"
+          ) +
+          "</span>";
+
       }
 
 
-      document
-        .getElementById("result")
-        .innerHTML =
+      removeCallback(callbackName);
 
-        '<span class="success">' +
-        "✅ PALLET FOUND" +
-        "</span><br><br>" +
-
-        "<b>Pallet:</b> " +
-        result.palletId +
-        "<br>" +
-
-        "<b>Product:</b> " +
-        result.product +
-        "<br>" +
-
-        "<b>Batch:</b> " +
-        result.batchId +
-        "<br>" +
-
-        "<b>Box Weight:</b> " +
-        result.boxWeight +
-        " KG<br>" +
-
-        "<b>Current Boxes:</b> " +
-        result.currentBoxes +
-        "<br>" +
-
-        "<b>Current KG:</b> " +
-        result.currentKG +
-        " KG<br>" +
-
-        "<b>Room:</b> " +
-        result.currentRoom +
-        "<br>" +
-
-        "<b>Location:</b> " +
-        result.currentLocation +
-        "<br>" +
-
-        "<b>Status:</b> " +
-        result.status;
-
-      cleanup();
-
-
-      function cleanup() {
-
-        delete window[callbackName];
-
-        const oldScript =
-          document.getElementById(
-            callbackName
-          );
-
-        if (oldScript) {
-          oldScript.remove();
-        }
-      }
     };
 
+
+  /*
+   * Create script request
+   */
 
   const script =
     document.createElement("script");
 
-  script.id = callbackName;
+
+  script.id =
+    callbackName;
 
 
   script.src =
@@ -317,15 +355,29 @@ function getPalletDetails(palletId) {
     callbackName;
 
 
+  /*
+   * Connection error
+   */
+
   script.onerror =
     function() {
 
       document
         .getElementById("result")
         .innerHTML =
-          '<span class="error">' +
-          "❌ Could not connect to Google Sheet." +
-          "</span>";
+
+        '<span class="error">' +
+
+        "❌ Could not connect to Google Sheet." +
+
+        "<br><br>" +
+
+        "Please check Apps Script deployment." +
+
+        "</span>";
+
+
+      removeCallback(callbackName);
 
     };
 
@@ -333,6 +385,95 @@ function getPalletDetails(palletId) {
   document
     .body
     .appendChild(script);
+
+
+  /*
+   * Timeout protection
+   */
+
+  setTimeout(
+    function() {
+
+      if (
+        document.getElementById(
+          callbackName
+        )
+      ) {
+
+        document
+          .getElementById("result")
+          .innerHTML =
+
+          '<span class="error">' +
+
+          "❌ Google Sheet response timeout." +
+
+          "</span>";
+
+
+        removeCallback(
+          callbackName
+        );
+
+      }
+
+    },
+    15000
+  );
+
+}
+
+
+/* =========================================
+   REMOVE CALLBACK
+========================================= */
+
+function removeCallback(name) {
+
+  try {
+
+    delete window[name];
+
+  } catch (e) {}
+
+
+  const script =
+    document.getElementById(name);
+
+
+  if (script) {
+
+    script.remove();
+
+  }
+
+}
+
+
+/* =========================================
+   SAFE DISPLAY
+========================================= */
+
+function safe(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return "-";
+
+  }
+
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 }
 
 </script>
