@@ -102,8 +102,18 @@ input {
   font-weight: bold;
 }
 
+.info {
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
 .hidden {
   display: none;
+}
+
+.palletDetails {
+  margin-top: 15px;
+  line-height: 2;
 }
 
 </style>
@@ -120,7 +130,7 @@ input {
 
 
 <!-- =========================================
-     STEP 1
+     METHOD SCREEN
      ========================================= -->
 
 <div id="methodScreen">
@@ -148,7 +158,7 @@ input {
 
 
 <!-- =========================================
-     LIVE CAMERA
+     CAMERA
      ========================================= -->
 
 <div
@@ -169,7 +179,7 @@ input {
 
 
 <!-- =========================================
-     TYPE PALLET
+     TYPE SCREEN
      ========================================= -->
 
 <div
@@ -185,6 +195,7 @@ input {
     autocomplete="off"
     autocapitalize="characters">
 
+
   <button
     class="checkButton"
     onclick="submitTypedPallet()">
@@ -192,6 +203,7 @@ input {
     CHECK PALLET
 
   </button>
+
 
   <button
     class="closeButton"
@@ -205,11 +217,11 @@ input {
 
 
 <!-- =========================================
-     PALLET RESULT
+     PALLET CAPTURED
      ========================================= -->
 
 <div
-  id="resultScreen"
+  id="capturedScreen"
   class="hidden">
 
   <div class="result">
@@ -222,17 +234,59 @@ input {
 
     <b>Pallet ID:</b>
 
-    <span id="capturedPallet">
-    </span>
+    <span id="capturedPallet"></span>
 
   </div>
 
 
   <button
     class="checkButton"
-    onclick="checkPallet()">
+    onclick="loadPallet()">
 
     🔍 CHECK PALLET
+
+  </button>
+
+
+  <button
+    class="closeButton"
+    onclick="backToMethod()">
+
+    ← BACK
+
+  </button>
+
+</div>
+
+
+<!-- =========================================
+     PALLET DETAILS
+     ========================================= -->
+
+<div
+  id="palletScreen"
+  class="hidden">
+
+  <div class="result">
+
+    <div class="success">
+      ✅ PALLET FOUND
+    </div>
+
+
+    <div
+      id="palletDetails"
+      class="palletDetails">
+    </div>
+
+  </div>
+
+
+  <button
+    class="scanButton"
+    onclick="nextLocationStep()">
+
+    📍 SCAN LOCATION QR
 
   </button>
 
@@ -267,6 +321,14 @@ input {
 <script>
 
 /************************************************
+ * CONFIGURATION
+ ************************************************/
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbyCTjHaU-7Md7FWXv1NxcTnJvt934LZ0c9KbyHyxEB92LERxjWzf1XcUBeRAX7fhImX/exec";
+
+
+/************************************************
  * VARIABLES
  ************************************************/
 
@@ -274,34 +336,26 @@ let scanner = null;
 
 let selectedPalletId = "";
 
+let palletData = null;
+
 
 /************************************************
- * START LIVE CAMERA
+ * START CAMERA
  ************************************************/
 
 function startScanner() {
 
-  document
-    .getElementById("methodScreen")
-    .classList.add("hidden");
+  hideAllScreens();
 
   document
     .getElementById("scannerScreen")
     .classList.remove("hidden");
 
-  document
-    .getElementById("typeScreen")
-    .classList.add("hidden");
 
-  document
-    .getElementById("resultScreen")
-    .classList.add("hidden");
-
-
-  document
-    .getElementById("message")
-    .innerHTML =
-      "📷 Opening live camera...";
+  setMessage(
+    "📷 Opening live camera...",
+    "info"
+  );
 
 
   scanner =
@@ -321,6 +375,7 @@ function startScanner() {
         width: 250,
         height: 250
       }
+
     },
 
     function(decodedText) {
@@ -328,6 +383,7 @@ function startScanner() {
       selectedPalletId =
         String(decodedText)
         .trim();
+
 
       stopScanner();
 
@@ -337,19 +393,16 @@ function startScanner() {
 
     function(errorMessage) {
 
-      // Ignore normal scan messages
+      // Ignore normal scanning messages
 
     }
 
   ).catch(function(error) {
 
-    document
-      .getElementById("message")
-      .innerHTML =
-        '<span class="error">' +
-        "❌ Camera error: " +
-        error +
-        "</span>";
+    setMessage(
+      "❌ Camera error: " + error,
+      "error"
+    );
 
   });
 
@@ -362,22 +415,33 @@ function startScanner() {
 
 function stopScanner() {
 
-  if (scanner) {
+  if (!scanner) {
 
-    scanner.stop()
-      .then(function() {
+    document
+      .getElementById("scannerScreen")
+      .classList.add("hidden");
 
-        scanner.clear();
+    return;
 
-        scanner = null;
-
-      })
-      .catch(function() {
-
-        scanner = null;
-
-      });
   }
+
+
+  scanner.stop()
+
+    .then(function() {
+
+      scanner.clear();
+
+      scanner = null;
+
+    })
+
+    .catch(function() {
+
+      scanner = null;
+
+    });
+
 
   document
     .getElementById("scannerScreen")
@@ -387,22 +451,12 @@ function stopScanner() {
 
 
 /************************************************
- * SHOW TYPE SCREEN
+ * TYPE SCREEN
  ************************************************/
 
 function showTypeScreen() {
 
-  document
-    .getElementById("methodScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("scannerScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("resultScreen")
-    .classList.add("hidden");
+  hideAllScreens();
 
   document
     .getElementById("typeScreen")
@@ -413,6 +467,7 @@ function showTypeScreen() {
     .getElementById("palletInput")
     .value = "";
 
+
   document
     .getElementById("palletInput")
     .focus();
@@ -421,7 +476,7 @@ function showTypeScreen() {
 
 
 /************************************************
- * SUBMIT TYPED PALLET
+ * TYPED PALLET
  ************************************************/
 
 function submitTypedPallet() {
@@ -435,14 +490,13 @@ function submitTypedPallet() {
 
   if (!value) {
 
-    document
-      .getElementById("message")
-      .innerHTML =
-        '<span class="error">' +
-        "❌ Enter Pallet ID" +
-        "</span>";
+    setMessage(
+      "❌ Please enter Pallet ID.",
+      "error"
+    );
 
     return;
+
   }
 
 
@@ -461,20 +515,10 @@ function submitTypedPallet() {
 
 function showCapturedPallet() {
 
-  document
-    .getElementById("methodScreen")
-    .classList.add("hidden");
+  hideAllScreens();
 
   document
-    .getElementById("scannerScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("typeScreen")
-    .classList.add("hidden");
-
-  document
-    .getElementById("resultScreen")
+    .getElementById("capturedScreen")
     .classList.remove("hidden");
 
 
@@ -484,37 +528,330 @@ function showCapturedPallet() {
       selectedPalletId;
 
 
-  document
-    .getElementById("message")
-    .innerHTML =
-      "Pallet ID captured successfully.";
+  setMessage(
+    "Pallet ID captured successfully.",
+    "info"
+  );
 
 }
 
 
 /************************************************
- * CHECK PALLET
- *
- * TEMPORARY
- *
- * Backend connection will be added
- * only after Step 1 is confirmed.
+ * LOAD PALLET FROM GOOGLE SHEET
  ************************************************/
 
-function checkPallet() {
+function loadPallet() {
+
+  if (!selectedPalletId) {
+
+    setMessage(
+      "❌ Pallet ID is empty.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  hideAllScreens();
+
+
+  setMessage(
+    "🔍 Checking pallet " +
+    selectedPalletId +
+    "...",
+    "info"
+  );
+
+
+  /*
+   * JSONP callback
+   */
+
+  const callbackName =
+    "abcPallet_" +
+    Date.now();
+
+
+  /*
+   * Create callback
+   */
+
+  window[callbackName] =
+    function(data) {
+
+      console.log(
+        "ABC Fruits API:",
+        data
+      );
+
+
+      if (
+        data &&
+        data.ok === true
+      ) {
+
+        palletData = data;
+
+        showPalletDetails(data);
+
+      }
+
+      else {
+
+        setMessage(
+          "❌ " +
+          (
+            data &&
+            data.message
+              ? data.message
+              : "Pallet not found."
+          ),
+          "error"
+        );
+
+
+        showCapturedScreen();
+
+      }
+
+
+      cleanup();
+
+    };
+
+
+  /*
+   * Build API URL
+   *
+   * IMPORTANT:
+   * pallet is in PATH
+   */
+
+  const requestUrl =
+    API_URL +
+    "/pallet/" +
+    encodeURIComponent(
+      selectedPalletId
+    ) +
+    "?prefix=" +
+    encodeURIComponent(
+      callbackName
+    );
+
+
+  console.log(
+    "Request URL:",
+    requestUrl
+  );
+
+
+  /*
+   * JSONP script
+   */
+
+  const script =
+    document.createElement(
+      "script"
+    );
+
+
+  script.id =
+    callbackName;
+
+
+  script.src =
+    requestUrl;
+
+
+  script.onerror =
+    function() {
+
+      setMessage(
+        "❌ Apps Script request failed.",
+        "error"
+      );
+
+
+      showCapturedScreen();
+
+      cleanup();
+
+    };
+
 
   document
-    .getElementById("message")
+    .body
+    .appendChild(script);
+
+
+  /*
+   * Timeout
+   */
+
+  setTimeout(function() {
+
+    if (
+      document.getElementById(
+        callbackName
+      )
+    ) {
+
+      setMessage(
+        "❌ No response from Apps Script.",
+        "error"
+      );
+
+
+      showCapturedScreen();
+
+      cleanup();
+
+    }
+
+  }, 15000);
+
+
+  /*
+   * Cleanup
+   */
+
+  function cleanup() {
+
+    try {
+
+      delete window[callbackName];
+
+    }
+
+    catch (e) {}
+
+
+    const oldScript =
+      document.getElementById(
+        callbackName
+      );
+
+
+    if (oldScript) {
+
+      oldScript.remove();
+
+    }
+
+  }
+
+}
+
+
+/************************************************
+ * SHOW PALLET DETAILS
+ ************************************************/
+
+function showPalletDetails(data) {
+
+  hideAllScreens();
+
+
+  document
+    .getElementById("palletScreen")
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById("palletDetails")
     .innerHTML =
 
-      "🔍 Pallet ID received: <b>" +
-      escapeHtml(
-        selectedPalletId
-      ) +
-      "</b><br><br>" +
+      "<b>Pallet ID:</b> " +
+      safe(data.palletId) +
 
-      "Next step: connect this ID to " +
-      "PALLET_MASTER.";
+      "<br>" +
+
+      "<b>Batch ID:</b> " +
+      safe(data.batchId) +
+
+      "<br>" +
+
+      "<b>Product:</b> " +
+      safe(data.product) +
+
+      "<br>" +
+
+      "<b>Production Date:</b> " +
+      safe(data.productionDate) +
+
+      "<br>" +
+
+      "<b>Box Weight:</b> " +
+      safe(data.boxWeightKG) +
+      " KG" +
+
+      "<br>" +
+
+      "<b>Original Boxes:</b> " +
+      safe(data.originalBoxes) +
+
+      "<br>" +
+
+      "<b>Current Boxes:</b> " +
+      safe(data.currentBoxes) +
+
+      "<br>" +
+
+      "<b>Current KG:</b> " +
+      safe(data.currentKG) +
+      " KG" +
+
+      "<br>" +
+
+      "<b>Current Room:</b> " +
+      safe(data.currentRoom || "-") +
+
+      "<br>" +
+
+      "<b>Current Location:</b> " +
+      safe(data.currentLocation || "-") +
+
+      "<br>" +
+
+      "<b>Status:</b> " +
+      safe(data.status);
+
+
+  setMessage(
+    "✅ Pallet information loaded from Google Sheet.",
+    "success"
+  );
+
+}
+
+
+/************************************************
+ * NEXT LOCATION STEP
+ ************************************************/
+
+function nextLocationStep() {
+
+  setMessage(
+    "📍 Pallet verified. Location QR scanning will be added next.",
+    "info"
+  );
+
+}
+
+
+/************************************************
+ * SHOW CAPTURED SCREEN
+ ************************************************/
+
+function showCapturedScreen() {
+
+  hideAllScreens();
+
+  document
+    .getElementById("capturedScreen")
+    .classList.remove("hidden");
 
 }
 
@@ -527,9 +864,35 @@ function backToMethod() {
 
   stopScanner();
 
+  selectedPalletId = "";
+
+  palletData = null;
+
+  hideAllScreens();
+
+
   document
     .getElementById("methodScreen")
     .classList.remove("hidden");
+
+
+  setMessage(
+    "Select Scan or Type Pallet ID.",
+    "info"
+  );
+
+}
+
+
+/************************************************
+ * HIDE ALL
+ ************************************************/
+
+function hideAllScreens() {
+
+  document
+    .getElementById("methodScreen")
+    .classList.add("hidden");
 
   document
     .getElementById("scannerScreen")
@@ -540,29 +903,121 @@ function backToMethod() {
     .classList.add("hidden");
 
   document
-    .getElementById("resultScreen")
+    .getElementById("capturedScreen")
+    .classList.add("hidden");
+
+  document
+    .getElementById("palletScreen")
     .classList.add("hidden");
 
 }
 
 
 /************************************************
- * SAFE TEXT
+ * MESSAGE
  ************************************************/
+
+function setMessage(
+  message,
+  type
+) {
+
+  const box =
+    document.getElementById(
+      "message"
+    );
+
+
+  box.innerHTML =
+    message;
+
+
+  box.className =
+    "result";
+
+
+  if (type === "error") {
+
+    box.classList.add(
+      "error"
+    );
+
+  }
+
+  else if (
+    type === "success"
+  ) {
+
+    box.classList.add(
+      "success"
+    );
+
+  }
+
+  else {
+
+    box.classList.add(
+      "info"
+    );
+
+  }
+
+}
+
+
+/************************************************
+ * SAFE HTML
+ ************************************************/
+
+function safe(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return "-";
+
+  }
+
+
+  return escapeHtml(
+    String(value)
+  );
+
+}
+
 
 function escapeHtml(value) {
 
   return String(value)
 
-    .replace(/&/g, "&amp;")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
 
-    .replace(/</g, "&lt;")
+    .replace(
+      /</g,
+      "&lt;"
+    )
 
-    .replace(/>/g, "&gt;")
+    .replace(
+      />/g,
+      "&gt;"
+    )
 
-    .replace(/"/g, "&quot;")
+    .replace(
+      /"/g,
+      "&quot;"
+    )
 
-    .replace(/'/g, "&#039;");
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
 }
 
 </script>
