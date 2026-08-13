@@ -1,249 +1,982 @@
-function verifyPallet() {
+<!DOCTYPE html>
+<html lang="en">
 
-  if (!selectedPalletId) {
+<head>
 
-    setMessage(
-      "❌ Pallet ID is empty.",
-      "error"
-    );
+<meta charset="UTF-8">
 
-    return;
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0">
+
+<title>ABC Fruits - Pallet Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 15px;
+  background: #f3f4f6;
+  font-family: Arial, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 540px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+
+h1 {
+  text-align: center;
+  margin: 5px 0;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.scan {
+  background: #111827;
+  color: white;
+}
+
+.type {
+  background: #2563eb;
+  color: white;
+}
+
+.back {
+  background: #6b7280;
+  color: white;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+#reader {
+  width: 100%;
+  margin-top: 15px;
+}
+
+.result {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  line-height: 1.8;
+}
+
+.success {
+  color: #047857;
+  font-weight: bold;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+.info {
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none !important;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="card">
+
+<h1>🍎 ABC Fruits</h1>
+
+<h2>❄️ Pallet Verification</h2>
+
+
+<!-- HOME -->
+
+<div id="home">
+
+<button
+  class="scan"
+  onclick="startScanner()">
+
+📷 SCAN PALLET QR
+
+</button>
+
+
+<button
+  class="type"
+  onclick="showType()">
+
+⌨️ TYPE PALLET ID
+
+</button>
+
+</div>
+
+
+<!-- CAMERA -->
+
+<div
+  id="camera"
+  class="hidden">
+
+<h3>📷 Scan Pallet QR</h3>
+
+<div id="reader"></div>
+
+<button
+  class="back"
+  onclick="stopScanner()">
+
+✖ CLOSE CAMERA
+
+</button>
+
+</div>
+
+
+<!-- TYPE -->
+
+<div
+  id="typeScreen"
+  class="hidden">
+
+<h3>Enter Pallet ID</h3>
+
+<input
+  id="palletInput"
+  placeholder="PAL-000001"
+  autocomplete="off">
+
+<button
+  class="scan"
+  onclick="typePallet()">
+
+🔍 VERIFY PALLET
+
+</button>
+
+<button
+  class="back"
+  onclick="goHome()">
+
+← BACK
+
+</button>
+
+</div>
+
+
+<!-- CHECKING -->
+
+<div
+  id="checking"
+  class="hidden">
+
+<div class="result">
+
+<div class="info">
+🔍 CHECKING PALLET ID...
+</div>
+
+<br>
+
+<b>Pallet ID:</b>
+
+<span id="checkingId"></span>
+
+</div>
+
+</div>
+
+
+<!-- VERIFIED -->
+
+<div
+  id="verified"
+  class="hidden">
+
+<div class="result">
+
+<div class="success">
+
+✅ PALLET ID VERIFIED SUCCESSFULLY
+
+</div>
+
+<br>
+
+<div id="details"></div>
+
+</div>
+
+
+<button
+  class="back"
+  onclick="goHome()">
+
+✔ DONE
+
+</button>
+
+</div>
+
+
+<!-- MESSAGE -->
+
+<div
+  id="message"
+  class="result">
+
+Ready.
+
+</div>
+
+
+</div>
+
+
+<script>
+
+
+/************************************************
+ * IMPORTANT
+ *
+ * PUT YOUR NEW /exec URL HERE
+ ************************************************/
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwdsmCQzonGG9mVq_JmU0jOOHKnY2lbxxMOdWWie_J34s_2g3LMNjUKE_w3KOUUN7jD/exec";
+
+
+let scanner = null;
+
+let selectedPalletId = "";
+
+
+/************************************************
+ * START CAMERA
+ ************************************************/
+
+function startScanner() {
+
+hideAll();
+
+document
+  .getElementById("camera")
+  .classList.remove("hidden");
+
+
+setMessage(
+  "📷 Opening camera...",
+  "info"
+);
+
+
+scanner =
+  new Html5Qrcode("reader");
+
+
+scanner.start(
+
+{
+  facingMode: "environment"
+},
+
+{
+  fps: 10,
+
+  qrbox: {
+    width: 250,
+    height: 250
   }
 
-  hideAllScreens();
+},
 
+function(decodedText) {
+
+selectedPalletId =
+  String(decodedText)
+    .trim()
+    .toUpperCase();
+
+
+stopScanner();
+
+
+verifyPallet();
+
+},
+
+function(error) {
+
+}
+
+)
+
+.catch(function(error) {
+
+setMessage(
+  "❌ Camera error: " +
+  error,
+  "error"
+);
+
+});
+
+}
+
+
+/************************************************
+ * STOP CAMERA
+ ************************************************/
+
+function stopScanner() {
+
+if (!scanner) {
+
+document
+  .getElementById("camera")
+  .classList.add("hidden");
+
+return;
+
+}
+
+
+scanner
+  .stop()
+  .then(function() {
+
+    try {
+      scanner.clear();
+    } catch(e) {}
+
+    scanner = null;
+
+  })
+  .catch(function() {
+
+    scanner = null;
+
+  });
+
+
+document
+  .getElementById("camera")
+  .classList.add("hidden");
+
+}
+
+
+/************************************************
+ * TYPE SCREEN
+ ************************************************/
+
+function showType() {
+
+hideAll();
+
+document
+  .getElementById("typeScreen")
+  .classList.remove("hidden");
+
+
+document
+  .getElementById("palletInput")
+  .focus();
+
+}
+
+
+/************************************************
+ * TYPE PALLET
+ ************************************************/
+
+function typePallet() {
+
+const value =
   document
-    .getElementById("checkingScreen")
-    .classList.remove("hidden");
-
-  document
-    .getElementById("checkingPalletId")
-    .innerText = selectedPalletId;
-
-  setMessage(
-    "🔍 Checking Pallet ID...",
-    "info"
-  );
+    .getElementById("palletInput")
+    .value
+    .trim()
+    .toUpperCase();
 
 
-  const callbackName =
-    "abcPallet_" + Date.now();
+if (!value) {
+
+setMessage(
+  "❌ Enter Pallet ID.",
+  "error"
+);
+
+return;
+
+}
 
 
-  let finished = false;
+selectedPalletId =
+  value;
 
 
-  window[callbackName] = function(data) {
+verifyPallet();
 
-    if (finished) {
-      return;
-    }
-
-    finished = true;
-
-    console.log(
-      "ABC FRUITS RESPONSE:",
-      data
-    );
+}
 
 
-    if (
-      data &&
-      data.ok === true
-    ) {
+/************************************************
+ * VERIFY PALLET
+ ************************************************/
 
-      palletData = data;
+function verifyPallet() {
 
-      showVerifiedScreen();
+if (!selectedPalletId) {
 
-      cleanup();
+setMessage(
+  "❌ Pallet ID missing.",
+  "error"
+);
 
-      return;
-    }
+return;
 
-
-    setMessage(
-      "❌ " +
-      (
-        data && data.message
-          ? data.message
-          : "Pallet not found."
-      ),
-      "error"
-    );
-
-    showHome();
-
-    cleanup();
-
-  };
+}
 
 
-  /*
-   * EXACT API REQUEST
-   */
-
-  const requestUrl =
-    API_URL +
-    "/pallet/" +
-    encodeURIComponent(
-      selectedPalletId
-    ) +
-    "?prefix=" +
-    encodeURIComponent(
-      callbackName
-    ) +
-    "&t=" +
-    Date.now();
+hideAll();
 
 
-  console.log(
-    "================================"
-  );
+document
+  .getElementById("checking")
+  .classList.remove("hidden");
 
-  console.log(
-    "PALLET ID:",
+
+document
+  .getElementById("checkingId")
+  .innerText =
+    selectedPalletId;
+
+
+setMessage(
+  "🔍 Checking Pallet...",
+  "info"
+);
+
+
+/*
+ * Unique callback
+ */
+
+const callback =
+  "abcPallet_" +
+  Date.now();
+
+
+let completed = false;
+
+
+/*
+ * JSONP callback
+ */
+
+window[callback] =
+function(data) {
+
+if (completed) {
+  return;
+}
+
+completed = true;
+
+
+console.log(
+  "ABC FRUITS RESPONSE:",
+  data
+);
+
+
+/*
+ * SUCCESS
+ */
+
+if (
+  data &&
+  data.ok === true
+) {
+
+showVerified(data);
+
+cleanup();
+
+return;
+
+}
+
+
+/*
+ * ERROR
+ */
+
+setMessage(
+  "❌ " +
+  (
+    data &&
+    data.message
+      ? data.message
+      : "Pallet not found."
+  ),
+  "error"
+);
+
+
+goHome();
+
+cleanup();
+
+};
+
+
+/*
+ * IMPORTANT:
+ *
+ * This MUST be:
+ *
+ * /pallet/PAL-000001
+ *
+ * NOT:
+ *
+ * ?action=getPallet
+ */
+
+const url =
+  API_URL +
+  "/pallet/" +
+  encodeURIComponent(
     selectedPalletId
+  ) +
+  "?prefix=" +
+  encodeURIComponent(
+    callback
+  ) +
+  "&t=" +
+  Date.now();
+
+
+console.log(
+  "REQUEST:",
+  url
+);
+
+
+/*
+ * JSONP script
+ */
+
+const script =
+  document.createElement(
+    "script"
   );
 
-  console.log(
-    "API URL:",
-    API_URL
-  );
 
-  console.log(
-    "REQUEST URL:",
-    requestUrl
-  );
-
-  console.log(
-    "CALLBACK:",
-    callbackName
-  );
-
-  console.log(
-    "================================"
-  );
+script.id =
+  callback;
 
 
-  /*
-   * JSONP
-   */
-
-  const script =
-    document.createElement("script");
+script.src =
+  url;
 
 
-  script.src = requestUrl;
-
-  script.async = true;
-
-  script.type =
-    "text/javascript";
+script.async = true;
 
 
-  script.onload = function() {
+script.onerror =
+function() {
 
-    console.log(
-      "✅ Apps Script script loaded"
-    );
+if (completed) {
+  return;
+}
 
-  };
-
-
-  script.onerror = function(error) {
-
-    console.error(
-      "❌ APPS SCRIPT REQUEST FAILED",
-      error
-    );
-
-    console.error(
-      "URL:",
-      requestUrl
-    );
+completed = true;
 
 
-    if (finished) {
-      return;
-    }
-
-    finished = true;
-
-
-    setMessage(
-      "❌ Pallet API request failed.",
-      "error"
-    );
+console.error(
+  "API REQUEST FAILED:",
+  url
+);
 
 
-    showHome();
+setMessage(
+  "❌ Pallet API request failed.",
+  "error"
+);
 
-    cleanup();
 
-  };
+goHome();
 
 
-  document.head.appendChild(
+cleanup();
+
+};
+
+
+document
+  .head
+  .appendChild(
     script
   );
 
 
-  /*
-   * Timeout
-   */
+/*
+ * Timeout
+ */
 
-  setTimeout(function() {
+setTimeout(function() {
 
-    if (finished) {
-      return;
-    }
-
-
-    console.error(
-      "❌ API TIMEOUT"
-    );
+if (completed) {
+  return;
+}
 
 
-    finished = true;
+completed = true;
 
 
-    setMessage(
-      "❌ Pallet API timeout.",
-      "error"
-    );
+setMessage(
+  "❌ Pallet API timeout.",
+  "error"
+);
 
 
-    showHome();
-
-    cleanup();
-
-  }, 15000);
+goHome();
 
 
-  function cleanup() {
+cleanup();
 
-    try {
-
-      delete window[
-        callbackName
-      ];
-
-    } catch (e) {}
+}, 15000);
 
 
-    const oldScript =
-      document.getElementById(
-        callbackName
-      );
+/*
+ * Cleanup
+ */
 
+function cleanup() {
 
-    if (oldScript) {
+try {
 
-      oldScript.remove();
-
-    }
-
-  }
+delete window[
+  callback
+];
 
 }
+
+catch(e) {}
+
+
+const old =
+  document.getElementById(
+    callback
+  );
+
+
+if (old) {
+
+old.remove();
+
+}
+
+}
+
+}
+
+
+/************************************************
+ * SHOW VERIFIED
+ ************************************************/
+
+function showVerified(data) {
+
+hideAll();
+
+
+document
+  .getElementById("verified")
+  .classList.remove("hidden");
+
+
+document
+  .getElementById("details")
+  .innerHTML =
+
+"<b>Pallet ID:</b> " +
+safe(data.palletId) +
+
+"<br>" +
+
+"<b>Batch ID:</b> " +
+safe(data.batchId) +
+
+"<br>" +
+
+"<b>Product:</b> " +
+safe(data.product) +
+
+"<br>" +
+
+"<b>Production Date:</b> " +
+safe(data.productionDate) +
+
+"<br>" +
+
+"<b>Box Weight:</b> " +
+safe(data.boxWeightKG) +
+" KG" +
+
+"<br>" +
+
+"<b>Original Boxes:</b> " +
+safe(data.originalBoxes) +
+
+"<br>" +
+
+"<b>Current Boxes:</b> " +
+safe(data.currentBoxes) +
+
+"<br>" +
+
+"<b>Current KG:</b> " +
+safe(data.currentKG) +
+" KG" +
+
+"<br>" +
+
+"<b>Current Room:</b> " +
+safe(data.currentRoom || "-") +
+
+"<br>" +
+
+"<b>Current Location:</b> " +
+safe(data.currentLocation || "-") +
+
+"<br>" +
+
+"<b>Status:</b> " +
+safe(data.status);
+
+
+setMessage(
+  "✅ Pallet verified successfully.",
+  "success"
+);
+
+}
+
+
+/************************************************
+ * HOME
+ ************************************************/
+
+function goHome() {
+
+stopScanner();
+
+selectedPalletId = "";
+
+hideAll();
+
+
+document
+  .getElementById("home")
+  .classList.remove("hidden");
+
+
+setMessage(
+  "Ready to scan Pallet QR.",
+  "info"
+);
+
+}
+
+
+/************************************************
+ * HIDE ALL
+ ************************************************/
+
+function hideAll() {
+
+document
+  .getElementById("home")
+  .classList.add("hidden");
+
+
+document
+  .getElementById("camera")
+  .classList.add("hidden");
+
+
+document
+  .getElementById("typeScreen")
+  .classList.add("hidden");
+
+
+document
+  .getElementById("checking")
+  .classList.add("hidden");
+
+
+document
+  .getElementById("verified")
+  .classList.add("hidden");
+
+}
+
+
+/************************************************
+ * MESSAGE
+ ************************************************/
+
+function setMessage(
+  text,
+  type
+) {
+
+const box =
+  document.getElementById(
+    "message"
+  );
+
+
+box.innerHTML =
+  text;
+
+
+box.className =
+  "result";
+
+
+if (
+  type === "success"
+) {
+
+box.classList.add(
+  "success"
+);
+
+}
+
+else if (
+  type === "error"
+) {
+
+box.classList.add(
+  "error"
+);
+
+}
+
+else {
+
+box.classList.add(
+  "info"
+);
+
+}
+
+}
+
+
+/************************************************
+ * SAFE TEXT
+ ************************************************/
+
+function safe(value) {
+
+if (
+  value === null ||
+  value === undefined ||
+  value === ""
+) {
+
+return "-";
+
+}
+
+
+return escapeHtml(
+  String(value)
+);
+
+}
+
+
+function escapeHtml(value) {
+
+return String(value)
+
+.replace(
+  /&/g,
+  "&amp;"
+)
+
+.replace(
+  /</g,
+  "&lt;"
+)
+
+.replace(
+  />/g,
+  "&gt;"
+)
+
+.replace(
+  /"/g,
+  "&quot;"
+)
+
+.replace(
+  /'/g,
+  "&#039;"
+);
+
+}
+
+</script>
+
+</body>
+
+</html>
