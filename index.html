@@ -88,9 +88,7 @@
 
   <h2>❄️ Cold Room Scanner</h2>
 
-  <button
-    class="scan"
-    onclick="startScanner()">
+  <button class="scan" onclick="startScanner()">
     📷 SCAN PALLET QR
   </button>
 
@@ -104,7 +102,7 @@
   </button>
 
   <div id="result" class="result">
-    Scan a pallet QR.
+    Scan a pallet QR to check live stock.
   </div>
 
 </div>
@@ -113,7 +111,7 @@
 <script>
 
 /************************************************
- * GOOGLE APPS SCRIPT WEB APP
+ * ABC FRUITS APPS SCRIPT WEB APP
  ************************************************/
 
 const API_URL =
@@ -166,13 +164,13 @@ function startScanner() {
 
       stopScanner();
 
-      getPallet(decodedText);
+      checkPallet(decodedText);
 
     },
 
-    function(error) {
+    function(errorMessage) {
 
-      // Normal QR scanning errors ignored
+      // Ignore normal QR scanning messages
 
     }
 
@@ -187,7 +185,6 @@ function startScanner() {
         "</span>";
 
   });
-
 }
 
 
@@ -224,113 +221,70 @@ function stopScanner() {
 
 
 /************************************************
- * GET PALLET
+ * CHECK PALLET
  ************************************************/
 
-function getPallet(palletId) {
+function checkPallet(palletId) {
 
   palletId =
     String(palletId || "").trim();
 
 
+  if (!palletId) {
+
+    showError("Pallet QR is empty.");
+
+    return;
+  }
+
+
   document
     .getElementById("result")
     .innerHTML =
-      "🔍 Checking <b>" +
-      palletId +
+      "🔍 Checking pallet <b>" +
+      escapeHtml(palletId) +
       "</b>...";
 
 
   /*
-   * Create unique callback name
+   * Unique JSONP function
    */
 
   const callbackName =
-    "abcPallet_" +
+    "abcFruits_" +
     Date.now();
 
 
   /*
-   * Create callback function
+   * Create callback
    */
 
   window[callbackName] =
-    function(data) {
+    function(response) {
 
       console.log(
-        "Apps Script response:",
-        data
+        "ABC Fruits API:",
+        response
       );
 
 
       if (
-        data &&
-        data.ok === true
+        response &&
+        response.ok === true
       ) {
 
-        document
-          .getElementById("result")
-          .innerHTML =
-
-          '<div class="success">' +
-          "✅ PALLET FOUND" +
-          "</div>" +
-
-          "<b>Pallet:</b> " +
-          show(data.palletId) +
-          "<br>" +
-
-          "<b>Product:</b> " +
-          show(data.product) +
-          "<br>" +
-
-          "<b>Batch:</b> " +
-          show(data.batchId) +
-          "<br>" +
-
-          "<b>Box Weight:</b> " +
-          show(data.boxWeight) +
-          " KG<br>" +
-
-          "<b>Original Boxes:</b> " +
-          show(data.originalBoxes) +
-          "<br>" +
-
-          "<b>Current Boxes:</b> " +
-          show(data.currentBoxes) +
-          "<br>" +
-
-          "<b>Current KG:</b> " +
-          show(data.currentKG) +
-          " KG<br>" +
-
-          "<b>Room:</b> " +
-          show(data.currentRoom) +
-          "<br>" +
-
-          "<b>Location:</b> " +
-          show(data.currentLocation) +
-          "<br>" +
-
-          "<b>Status:</b> " +
-          show(data.status);
+        showPallet(response);
 
       }
 
       else {
 
-        document
-          .getElementById("result")
-          .innerHTML =
-
-          '<span class="error">' +
-          "❌ " +
-          show(
-            data && data.message
-              ? data.message
-              : "Pallet not found"
-          ) +
-          "</span>";
+        showError(
+          response &&
+          response.message
+            ? response.message
+            : "Pallet not found."
+        );
 
       }
 
@@ -341,9 +295,31 @@ function getPallet(palletId) {
 
 
   /*
-   * Create script element
+   * Build Apps Script URL
    *
-   * This is JSONP.
+   * IMPORTANT:
+   * prefix = JSONP callback
+   */
+
+  const url =
+    API_URL +
+    "?action=getPallet" +
+    "&palletId=" +
+    encodeURIComponent(palletId) +
+    "&prefix=" +
+    encodeURIComponent(callbackName) +
+    "&t=" +
+    Date.now();
+
+
+  console.log(
+    "Request URL:",
+    url
+  );
+
+
+  /*
+   * JSONP script
    */
 
   const script =
@@ -355,37 +331,25 @@ function getPallet(palletId) {
 
 
   script.src =
-    API_URL +
-    "?action=getPallet" +
-    "&palletId=" +
-    encodeURIComponent(palletId) +
-    "&callback=" +
-    callbackName +
-    "&v=" +
-    Date.now();
+    url;
 
 
-  /*
-   * If browser cannot load Apps Script
-   */
+  script.onload =
+    function() {
+
+      console.log(
+        "Apps Script request loaded"
+      );
+
+    };
+
 
   script.onerror =
     function() {
 
-      document
-        .getElementById("result")
-        .innerHTML =
-
-        '<span class="error">' +
-
-        "❌ Could not connect to Google Sheet." +
-
-        "<br><br>" +
-
+      showError(
         "Apps Script request failed."
-
-        + "</span>";
-
+      );
 
       cleanup();
 
@@ -409,15 +373,9 @@ function getPallet(palletId) {
       )
     ) {
 
-      document
-        .getElementById("result")
-        .innerHTML =
-
-        '<span class="error">' +
-
-        "❌ No response from Google Sheet."
-
-        + "</span>";
+      showError(
+        "No response from Google Sheet."
+      );
 
       cleanup();
 
@@ -425,6 +383,10 @@ function getPallet(palletId) {
 
   }, 15000);
 
+
+  /*
+   * Cleanup
+   */
 
   function cleanup() {
 
@@ -448,15 +410,86 @@ function getPallet(palletId) {
     }
 
   }
-
 }
 
 
 /************************************************
- * SAFE DISPLAY
+ * SHOW PALLET
  ************************************************/
 
-function show(value) {
+function showPallet(data) {
+
+  document
+    .getElementById("result")
+    .innerHTML =
+
+    '<div class="success">' +
+    "✅ PALLET FOUND" +
+    "</div>" +
+
+    "<b>Pallet ID:</b> " +
+    safe(data.palletId) +
+    "<br>" +
+
+    "<b>Product:</b> " +
+    safe(data.product) +
+    "<br>" +
+
+    "<b>Batch:</b> " +
+    safe(data.batchId) +
+    "<br>" +
+
+    "<b>Box Weight:</b> " +
+    safe(data.boxWeight) +
+    " KG<br>" +
+
+    "<b>Original Boxes:</b> " +
+    safe(data.originalBoxes) +
+    "<br>" +
+
+    "<b>Current Boxes:</b> " +
+    safe(data.currentBoxes) +
+    "<br>" +
+
+    "<b>Current KG:</b> " +
+    safe(data.currentKG) +
+    " KG<br>" +
+
+    "<b>Cold Room:</b> " +
+    safe(data.currentRoom) +
+    "<br>" +
+
+    "<b>Location:</b> " +
+    safe(data.currentLocation) +
+    "<br>" +
+
+    "<b>Status:</b> " +
+    safe(data.status);
+}
+
+
+/************************************************
+ * ERROR
+ ************************************************/
+
+function showError(message) {
+
+  document
+    .getElementById("result")
+    .innerHTML =
+
+    '<span class="error">' +
+    "❌ " +
+    escapeHtml(message) +
+    "</span>";
+}
+
+
+/************************************************
+ * SAFE TEXT
+ ************************************************/
+
+function safe(value) {
 
   if (
     value === null ||
@@ -467,6 +500,14 @@ function show(value) {
     return "-";
   }
 
+
+  return escapeHtml(
+    String(value)
+  );
+}
+
+
+function escapeHtml(value) {
 
   return String(value)
     .replace(/&/g, "&amp;")
