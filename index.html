@@ -1,190 +1,435 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>ABC Fruits Cold Room Scanner</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1">
 
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <title>
+    ABC Fruits Cold Room Scanner
+  </title>
+
+
+  <!-- QR SCANNER -->
+
+  <script
+    src="https://unpkg.com/html5-qrcode">
+  </script>
+
 
   <style>
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      background:
+        #f3f4f6;
+
       margin: 0;
+
       padding: 15px;
     }
 
+
     .card {
-      max-width: 520px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 18px;
-      box-shadow: 0 2px 12px #0002;
+
+      max-width:
+        520px;
+
+      margin:
+        auto;
+
+      background:
+        white;
+
+      padding:
+        20px;
+
+      border-radius:
+        18px;
+
+      box-shadow:
+        0 2px 12px #0002;
     }
 
-    h1, h2 {
-      text-align: center;
+
+    h1,
+    h2 {
+
+      text-align:
+        center;
     }
+
 
     button {
-      width: 100%;
-      padding: 16px;
-      margin: 8px 0;
-      border: 0;
-      border-radius: 10px;
-      font-size: 17px;
-      font-weight: bold;
+
+      width:
+        100%;
+
+      padding:
+        16px;
+
+      margin:
+        8px 0;
+
+      border:
+        none;
+
+      border-radius:
+        10px;
+
+      font-size:
+        17px;
+
+      font-weight:
+        bold;
     }
+
 
     .scan {
-      background: #111827;
-      color: white;
+
+      background:
+        #111827;
+
+      color:
+        white;
     }
+
 
     .close {
-      background: #6b7280;
-      color: white;
+
+      background:
+        #6b7280;
+
+      color:
+        white;
     }
 
-    .result {
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 12px;
-      background: #f1f5f9;
-      line-height: 1.8;
-      font-size: 16px;
-    }
-
-    .success {
-      color: #047857;
-      font-weight: bold;
-      font-size: 19px;
-    }
-
-    .error {
-      color: #b91c1c;
-      font-weight: bold;
-    }
-
-    .hidden {
-      display: none;
-    }
 
     #reader {
-      width: 100%;
-      margin-top: 15px;
+
+      width:
+        100%;
+
+      margin-top:
+        15px;
     }
+
+
+    .result {
+
+      margin-top:
+        18px;
+
+      padding:
+        16px;
+
+      border-radius:
+        12px;
+
+      background:
+        #f1f5f9;
+
+      line-height:
+        1.8;
+
+      font-size:
+        16px;
+    }
+
+
+    .success {
+
+      color:
+        #047857;
+
+      font-weight:
+        bold;
+
+      font-size:
+        19px;
+    }
+
+
+    .error {
+
+      color:
+        #b91c1c;
+
+      font-weight:
+        bold;
+    }
+
+
+    .hidden {
+
+      display:
+        none;
+    }
+
+
+    iframe {
+
+      display:
+        none;
+    }
+
   </style>
+
 </head>
+
 
 <body>
 
+
 <div class="card">
 
-  <h1>🍎 ABC Fruits</h1>
 
-  <h2>❄️ Cold Room Scanner</h2>
+  <h1>
+    🍎 ABC Fruits
+  </h1>
 
-  <button class="scan" onclick="startScanner()">
+
+  <h2>
+    ❄️ Cold Room Scanner
+  </h2>
+
+
+  <!--
+    Apps Script bridge
+
+    This does NOT open the camera.
+    It only connects GitHub to Google Sheet.
+  -->
+
+  <iframe
+    id="abcBridge"
+    title="ABC Fruits Inventory Bridge"
+    src="https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec">
+  </iframe>
+
+
+  <button
+    class="scan"
+    onclick="startScanner()">
+
     📷 SCAN PALLET QR
+
   </button>
 
-  <div id="reader" class="hidden"></div>
+
+  <div
+    id="reader">
+  </div>
+
 
   <button
     id="closeButton"
     class="close hidden"
     onclick="stopScanner()">
+
     ✖ CLOSE CAMERA
+
   </button>
 
-  <div id="result" class="result">
-    Scan a pallet QR to check live stock.
+
+  <div
+    id="result"
+    class="result">
+
+    Ready to scan pallet QR.
+
   </div>
+
 
 </div>
 
 
 <script>
 
+
 /************************************************
- * ABC FRUITS APPS SCRIPT WEB APP
+ * VARIABLES
  ************************************************/
-
-const API_URL =
-"https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec";
-
 
 let scanner = null;
 
+let bridgeReady = false;
+
 
 /************************************************
- * START CAMERA
+ * BRIDGE MESSAGE LISTENER
+ ************************************************/
+
+window.addEventListener(
+  "message",
+  function(event) {
+
+    if (!event.data) {
+      return;
+    }
+
+
+    /*
+     * PALLET RESULT
+     */
+
+    if (
+      event.data.type ===
+      "ABC_PALLET_RESULT"
+    ) {
+
+      const result =
+        event.data.result;
+
+
+      if (
+        result &&
+        result.ok === true
+      ) {
+
+        showPallet(result);
+
+      }
+
+      else {
+
+        showError(
+
+          result &&
+          result.message
+
+            ? result.message
+
+            : "Pallet not found."
+
+        );
+
+      }
+
+
+      return;
+    }
+
+
+    /*
+     * ERROR
+     */
+
+    if (
+      event.data.type ===
+      "ABC_PALLET_ERROR"
+    ) {
+
+      showError(
+
+        "Google Sheet error: " +
+        event.data.message
+
+      );
+
+    }
+
+  }
+);
+
+
+/************************************************
+ * START LIVE CAMERA
  ************************************************/
 
 function startScanner() {
 
   document
-    .getElementById("reader")
-    .classList.remove("hidden");
+    .getElementById("result")
+    .innerHTML =
+      "📷 Opening live camera...";
+
 
   document
     .getElementById("closeButton")
-    .classList.remove("hidden");
-
-  document
-    .getElementById("result")
-    .innerHTML =
-      "📷 Opening camera...";
+    .classList.remove(
+      "hidden"
+    );
 
 
   scanner =
-    new Html5Qrcode("reader");
+    new Html5Qrcode(
+      "reader"
+    );
 
 
-  scanner.start(
+  scanner
+    .start(
 
-    {
-      facingMode: "environment"
-    },
+      {
+        facingMode:
+          "environment"
+      },
 
-    {
-      fps: 10,
+      {
 
-      qrbox: {
-        width: 250,
-        height: 250
+        fps:
+          10,
+
+        qrbox:
+          {
+            width:
+              250,
+
+            height:
+              250
+          }
+
+      },
+
+
+      function(decodedText) {
+
+        /*
+         * QR FOUND
+         */
+
+        stopScanner();
+
+
+        checkPallet(
+          decodedText
+        );
+
+      },
+
+
+      function(errorMessage) {
+
+        /*
+         * Normal scanning
+         * messages are ignored.
+         */
+
       }
-    },
 
-    function(decodedText) {
+    )
 
-      stopScanner();
+    .catch(
+      function(error) {
 
-      checkPallet(decodedText);
+        showError(
 
-    },
+          "Camera error: " +
+          error
 
-    function(errorMessage) {
+        );
 
-      // Ignore normal QR scanning messages
-
-    }
-
-  ).catch(function(error) {
-
-    document
-      .getElementById("result")
-      .innerHTML =
-        '<span class="error">' +
-        "❌ Camera error: " +
-        error +
-        "</span>";
-
-  });
+      }
+    );
 }
 
 
@@ -194,45 +439,61 @@ function startScanner() {
 
 function stopScanner() {
 
-  if (scanner) {
+  if (!scanner) {
 
-    scanner
-      .stop()
-      .then(function() {
-
-        scanner.clear();
-
-      })
-      .catch(function() {});
-
-    scanner = null;
+    return;
   }
 
 
-  document
-    .getElementById("reader")
-    .classList.add("hidden");
+  scanner
+    .stop()
+
+    .then(
+      function() {
+
+        scanner.clear();
+
+        scanner = null;
+
+      }
+    )
+
+    .catch(
+      function() {
+
+        scanner = null;
+
+      }
+    );
 
 
   document
-    .getElementById("closeButton")
-    .classList.add("hidden");
+    .getElementById(
+      "closeButton"
+    )
+    .classList.add(
+      "hidden"
+    );
 }
 
 
 /************************************************
- * CHECK PALLET
+ * SEND PALLET TO BRIDGE
  ************************************************/
 
 function checkPallet(palletId) {
 
   palletId =
-    String(palletId || "").trim();
+    String(
+      palletId || ""
+    ).trim();
 
 
   if (!palletId) {
 
-    showError("Pallet QR is empty.");
+    showError(
+      "Pallet QR is empty."
+    );
 
     return;
   }
@@ -241,175 +502,53 @@ function checkPallet(palletId) {
   document
     .getElementById("result")
     .innerHTML =
+
       "🔍 Checking pallet <b>" +
-      escapeHtml(palletId) +
+
+      escapeHtml(
+        palletId
+      ) +
+
       "</b>...";
 
 
-  /*
-   * Unique JSONP function
-   */
-
-  const callbackName =
-    "abcFruits_" +
-    Date.now();
-
-
-  /*
-   * Create callback
-   */
-
-  window[callbackName] =
-    function(response) {
-
-      console.log(
-        "ABC Fruits API:",
-        response
+  const bridge =
+    document
+      .getElementById(
+        "abcBridge"
       );
 
 
-      if (
-        response &&
-        response.ok === true
-      ) {
+  if (
+    !bridge ||
+    !bridge.contentWindow
+  ) {
 
-        showPallet(response);
+    showError(
+      "Inventory bridge is not available."
+    );
 
-      }
-
-      else {
-
-        showError(
-          response &&
-          response.message
-            ? response.message
-            : "Pallet not found."
-        );
-
-      }
-
-
-      cleanup();
-
-    };
-
-
-  /*
-   * Build Apps Script URL
-   *
-   * IMPORTANT:
-   * prefix = JSONP callback
-   */
-
-  const url =
-    API_URL +
-    "?action=getPallet" +
-    "&palletId=" +
-    encodeURIComponent(palletId) +
-    "&prefix=" +
-    encodeURIComponent(callbackName) +
-    "&t=" +
-    Date.now();
-
-
-  console.log(
-    "Request URL:",
-    url
-  );
-
-
-  /*
-   * JSONP script
-   */
-
-  const script =
-    document.createElement("script");
-
-
-  script.id =
-    callbackName;
-
-
-  script.src =
-    url;
-
-
-  script.onload =
-    function() {
-
-      console.log(
-        "Apps Script request loaded"
-      );
-
-    };
-
-
-  script.onerror =
-    function() {
-
-      showError(
-        "Apps Script request failed."
-      );
-
-      cleanup();
-
-    };
-
-
-  document
-    .body
-    .appendChild(script);
-
-
-  /*
-   * Timeout
-   */
-
-  setTimeout(function() {
-
-    if (
-      document.getElementById(
-        callbackName
-      )
-    ) {
-
-      showError(
-        "No response from Google Sheet."
-      );
-
-      cleanup();
-
-    }
-
-  }, 15000);
-
-
-  /*
-   * Cleanup
-   */
-
-  function cleanup() {
-
-    try {
-
-      delete window[callbackName];
-
-    } catch (e) {}
-
-
-    const oldScript =
-      document.getElementById(
-        callbackName
-      );
-
-
-    if (oldScript) {
-
-      oldScript.remove();
-
-    }
-
+    return;
   }
+
+
+  bridge
+    .contentWindow
+    .postMessage(
+
+      {
+
+        type:
+          "ABC_GET_PALLET",
+
+        palletId:
+          palletId
+
+      },
+
+      "*"
+
+    );
 }
 
 
@@ -423,53 +562,104 @@ function showPallet(data) {
     .getElementById("result")
     .innerHTML =
 
-    '<div class="success">' +
-    "✅ PALLET FOUND" +
-    "</div>" +
+      '<div class="success">' +
 
-    "<b>Pallet ID:</b> " +
-    safe(data.palletId) +
-    "<br>" +
+      "✅ PALLET FOUND" +
 
-    "<b>Product:</b> " +
-    safe(data.product) +
-    "<br>" +
+      "</div><br>" +
 
-    "<b>Batch:</b> " +
-    safe(data.batchId) +
-    "<br>" +
 
-    "<b>Box Weight:</b> " +
-    safe(data.boxWeight) +
-    " KG<br>" +
+      "<b>Pallet ID:</b> " +
 
-    "<b>Original Boxes:</b> " +
-    safe(data.originalBoxes) +
-    "<br>" +
+      safe(
+        data.palletId
+      ) +
 
-    "<b>Current Boxes:</b> " +
-    safe(data.currentBoxes) +
-    "<br>" +
+      "<br>" +
 
-    "<b>Current KG:</b> " +
-    safe(data.currentKG) +
-    " KG<br>" +
 
-    "<b>Cold Room:</b> " +
-    safe(data.currentRoom) +
-    "<br>" +
+      "<b>Product:</b> " +
 
-    "<b>Location:</b> " +
-    safe(data.currentLocation) +
-    "<br>" +
+      safe(
+        data.product
+      ) +
 
-    "<b>Status:</b> " +
-    safe(data.status);
+      "<br>" +
+
+
+      "<b>Batch:</b> " +
+
+      safe(
+        data.batchId
+      ) +
+
+      "<br>" +
+
+
+      "<b>Box Weight:</b> " +
+
+      safe(
+        data.boxWeight
+      ) +
+
+      " KG<br>" +
+
+
+      "<b>Original Boxes:</b> " +
+
+      safe(
+        data.originalBoxes
+      ) +
+
+      "<br>" +
+
+
+      "<b>Current Boxes:</b> " +
+
+      safe(
+        data.currentBoxes
+      ) +
+
+      "<br>" +
+
+
+      "<b>Current KG:</b> " +
+
+      safe(
+        data.currentKG
+      ) +
+
+      " KG<br>" +
+
+
+      "<b>Cold Room:</b> " +
+
+      safe(
+        data.currentRoom
+      ) +
+
+      "<br>" +
+
+
+      "<b>Location:</b> " +
+
+      safe(
+        data.currentLocation
+      ) +
+
+      "<br>" +
+
+
+      "<b>Status:</b> " +
+
+      safe(
+        data.status
+      );
 }
 
 
 /************************************************
- * ERROR
+ * SHOW ERROR
  ************************************************/
 
 function showError(message) {
@@ -478,10 +668,15 @@ function showError(message) {
     .getElementById("result")
     .innerHTML =
 
-    '<span class="error">' +
-    "❌ " +
-    escapeHtml(message) +
-    "</span>";
+      '<span class="error">' +
+
+      "❌ " +
+
+      escapeHtml(
+        message
+      ) +
+
+      "</span>";
 }
 
 
@@ -510,14 +705,37 @@ function safe(value) {
 function escapeHtml(value) {
 
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
+
 
 </script>
 
+
 </body>
+
 </html>
