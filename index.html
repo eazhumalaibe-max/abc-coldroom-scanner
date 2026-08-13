@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>ABC Fruits QR Scanner</title>
+  <title>ABC Fruits Cold Room Scanner</title>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -12,61 +12,108 @@
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
-      padding: 20px;
-      text-align: center;
+      padding: 15px;
+      margin: 0;
     }
 
-    .box {
+    .card {
       max-width: 500px;
       margin: auto;
       background: white;
       padding: 20px;
-      border-radius: 15px;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px #0002;
+    }
+
+    h2, h3 {
+      text-align: center;
     }
 
     button {
       width: 100%;
       padding: 15px;
-      margin: 10px 0;
-      font-size: 17px;
+      margin: 7px 0;
       border: none;
       border-radius: 10px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .scan {
       background: #111827;
       color: white;
+    }
+
+    .close {
+      background: #6b7280;
+      color: white;
+    }
+
+    .info {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      line-height: 1.8;
+    }
+
+    .success {
+      color: #047857;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
     }
 
     #reader {
       width: 100%;
       margin-top: 15px;
     }
-
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f1f5f9;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: bold;
-    }
   </style>
 </head>
 
 <body>
 
-<div class="box">
+<div class="card">
 
   <h2>🍎 ABC Fruits</h2>
 
-  <h3>Cold Room QR Scanner</h3>
+  <h3>❄️ Cold Room Scanner</h3>
 
-  <button onclick="startScanner()">
+  <button
+    class="scan"
+    onclick="startScanner()">
+
     📷 SCAN PALLET QR
+
   </button>
 
-  <div id="reader"></div>
+  <div
+    id="reader"
+    class="hidden">
+  </div>
 
-  <div id="result">
-    Waiting for QR scan...
+  <button
+    id="closeBtn"
+    class="close hidden"
+    onclick="stopScanner()">
+
+    ✖ CLOSE CAMERA
+
+  </button>
+
+  <div
+    id="result"
+    class="info">
+
+    Scan a pallet QR to view live stock.
+
   </div>
 
 </div>
@@ -74,14 +121,38 @@
 
 <script>
 
+/* YOUR APPS SCRIPT WEB APP URL */
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwcKf7tvHMhWAazmLMj7jUuKfxGnJ-NnJfIhOXL08dGDeGS1LNDXcJka6jTM11yBvzk/exec";
+
+
 let scanner = null;
+
+
+/* =========================
+   START CAMERA
+========================= */
 
 function startScanner() {
 
-  document.getElementById("result").innerHTML =
-    "Opening camera...";
+  document
+    .getElementById("reader")
+    .classList.remove("hidden");
 
-  scanner = new Html5Qrcode("reader");
+  document
+    .getElementById("closeBtn")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("result")
+    .innerHTML =
+      "📷 Opening camera...";
+
+
+  scanner =
+    new Html5Qrcode("reader");
+
 
   scanner.start(
 
@@ -91,35 +162,220 @@ function startScanner() {
 
     {
       fps: 10,
+
       qrbox: {
         width: 250,
         height: 250
       }
+
     },
 
     function(decodedText) {
 
-      document.getElementById("result").innerHTML =
-        "✅ Scanned Pallet:<br><br>" +
-        decodedText;
+      stopScanner();
 
-      scanner.stop();
+      getPalletDetails(decodedText);
 
     },
 
     function(errorMessage) {
 
-      // Ignore continuous scanning errors
+      // Ignore normal scanning errors
 
     }
 
   ).catch(function(error) {
 
-    document.getElementById("result").innerHTML =
-      "❌ Camera Error:<br>" +
-      error;
+    document
+      .getElementById("result")
+      .innerHTML =
+        '<span class="error">' +
+        "Camera error: " +
+        error +
+        "</span>";
 
   });
+
+}
+
+
+/* =========================
+   STOP CAMERA
+========================= */
+
+function stopScanner() {
+
+  if (scanner) {
+
+    scanner
+      .stop()
+      .then(function() {
+
+        scanner.clear();
+
+      })
+      .catch(function() {});
+
+    scanner = null;
+
+  }
+
+
+  document
+    .getElementById("reader")
+    .classList.add("hidden");
+
+
+  document
+    .getElementById("closeBtn")
+    .classList.add("hidden");
+
+}
+
+
+/* =========================
+   GET PALLET FROM GOOGLE SHEET
+========================= */
+
+function getPalletDetails(palletId) {
+
+  document
+    .getElementById("result")
+    .innerHTML =
+      "🔍 Checking pallet <b>" +
+      palletId +
+      "</b>...";
+
+
+  /*
+    JSONP is used because this page
+    is hosted on GitHub Pages and
+    Apps Script is a different domain.
+  */
+
+  const callbackName =
+    "abcPalletCallback_" +
+    Date.now();
+
+
+  window[callbackName] =
+    function(result) {
+
+      try {
+
+        if (!result.ok) {
+
+          document
+            .getElementById("result")
+            .innerHTML =
+              '<span class="error">' +
+              "❌ " +
+              result.message +
+              "</span>";
+
+          return;
+
+        }
+
+
+        document
+          .getElementById("result")
+          .innerHTML =
+
+          '<div class="success">' +
+          "✅ PALLET FOUND" +
+          "</div><br>" +
+
+          "<b>Pallet:</b> " +
+          result.palletId +
+          "<br>" +
+
+          "<b>Product:</b> " +
+          result.product +
+          "<br>" +
+
+          "<b>Batch:</b> " +
+          result.batchId +
+          "<br>" +
+
+          "<b>Box Weight:</b> " +
+          result.boxWeight +
+          " KG<br>" +
+
+          "<b>Current Boxes:</b> " +
+          result.currentBoxes +
+          "<br>" +
+
+          "<b>Current KG:</b> " +
+          result.currentKG +
+          " KG<br>" +
+
+          "<b>Room:</b> " +
+          result.currentRoom +
+          "<br>" +
+
+          "<b>Location:</b> " +
+          result.currentLocation +
+          "<br>" +
+
+          "<b>Status:</b> " +
+          result.status;
+
+      }
+
+      finally {
+
+        delete window[callbackName];
+
+        const script =
+          document.getElementById(
+            callbackName
+          );
+
+        if (script) {
+
+          script.remove();
+
+        }
+
+      }
+
+    };
+
+
+  const script =
+    document.createElement("script");
+
+
+  script.id =
+    callbackName;
+
+
+  script.src =
+    API_URL +
+    "?action=getPallet" +
+    "&palletId=" +
+    encodeURIComponent(palletId) +
+    "&callback=" +
+    callbackName;
+
+
+  script.onerror =
+    function() {
+
+      document
+        .getElementById("result")
+        .innerHTML =
+          '<span class="error">' +
+          "❌ Could not connect to Google Sheet." +
+          "</span>";
+
+    };
+
+
+  document
+    .body
+    .appendChild(script);
 
 }
 
