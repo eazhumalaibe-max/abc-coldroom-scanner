@@ -372,6 +372,10 @@ th{
       📦 Pallet / QR
     </button>
 
+    <button class="tab" onclick="showPage('production',this)">
+      🏭 Production
+    </button>
+
     <button class="tab" onclick="showPage('inward',this)">
       ⬇️ Inward
     </button>
@@ -568,6 +572,99 @@ th{
 
 
   <!-- =====================================================
+       PRODUCTION
+  ====================================================== -->
+
+  <section id="production" class="page">
+
+    <div class="card">
+
+      <h2>🏭 Production / Pallet QR</h2>
+      <p class="muted">Production creates the pallet and QR. Storage location is assigned by Inward.</p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Next Pallet Number</label>
+          <input id="prodPallet" placeholder="PAL-000001" readonly>
+        </div>
+
+        <div>
+          <label>Pallet Queue</label>
+          <select id="prodPalletQueue" onchange="selectProductionPallet(this.value)">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Item Search</label>
+          <input id="prodItemSearch" placeholder="Type item name or item code..." oninput="searchItems('production')">
+          <div id="prodItemResults" class="search-results"></div>
+        </div>
+
+        <div>
+          <label>Selected Item Code</label>
+          <input id="prodItemCode" readonly>
+        </div>
+
+        <div>
+          <label>Selected Item Name</label>
+          <input id="prodProduct" readonly>
+        </div>
+
+        <div>
+          <label>Batch ID *</label>
+          <input id="prodBatch" placeholder="B001">
+        </div>
+
+        <div>
+          <label>Production Date *</label>
+          <input id="prodProductionDate" type="date">
+        </div>
+
+        <div>
+          <label>Expiry Date</label>
+          <input id="prodExpiryDate" type="date">
+        </div>
+
+        <div>
+          <label>Box Weight KG *</label>
+          <input id="prodBoxWeight" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Number of Boxes *</label>
+          <input id="prodBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="prodOperator" placeholder="Production operator">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="createProduction()">✅ CREATE PALLET + GENERATE QR</button>
+        <button class="btn secondary" onclick="loadPalletNumbers()">🔄 Refresh Pallet Queue</button>
+      </div>
+
+      <div id="productionQRResult" class="qr-result" style="display:none;margin-top:15px">
+        <h3>✅ Pallet QR Generated</h3>
+        <div id="productionQRCode" style="display:flex;justify-content:center;margin:15px 0"></div>
+        <div id="productionQRText" style="text-align:center;font-weight:bold"></div>
+        <div class="actions" style="justify-content:center">
+          <button class="btn" onclick="printProductionQR()">🖨️ PRINT QR LABEL</button>
+        </div>
+        <div class="muted" style="text-align:center">Paste this QR on the physical pallet and send it to Inward.</div>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
        INWARD
   ====================================================== -->
 
@@ -575,123 +672,49 @@ th{
 
     <div class="card">
 
-      <h2>⬇️ Inward / Create Pallet</h2>
+      <h2>⬇️ Inward</h2>
+      <p class="muted">Scan Production QR → verify pallet → select free storage location → Confirm Inward.</p>
 
       <div class="grid2">
 
         <div>
-          <label>Next Pallet Number</label>
-          <input id="inPallet" placeholder="PAL-000001" readonly>
-          <div class="muted" style="margin-top:5px">
-            Pallet number is automatically taken from Pallet Queue.
+          <label>Pallet QR / Pallet ID</label>
+          <input id="inPallet" placeholder="PAL-000001" oninput="lookupInwardPallet()">
+          <div class="actions">
+            <button class="btn blue" onclick="startInwardScanner()">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopInwardScanner()">Stop</button>
           </div>
         </div>
 
         <div>
-          <label>Pallet Queue</label>
-          <select id="inPalletQueue" onchange="selectInwardPallet(this.value)">
-            <option value="">Loading...</option>
+          <label>Storage Location *</label>
+          <input id="inLocationText" placeholder="Type location e.g. CR01-A01-01" oninput="setLocationFromText('inLocation', this.value)"> 
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('inLocationText','inLocationReader','location')">📷 SCAN LOCATION QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('inLocationReader')">Stop</button>
+          </div>
+          <div id="inLocationReader" style="margin-top:8px"></div>
+          <select id="inLocation" onchange="syncLocationText('inLocation','inLocationText')">
+            <option value="">Select Free Location</option>
           </select>
         </div>
 
         <div class="full">
-          <label>Item Search</label>
-
-          <input
-            id="inItemSearch"
-            placeholder="Type item name or item code..."
-            oninput="searchItems('in')"
-          >
-
-          <div id="inItemResults" class="search-results"></div>
-        </div>
-
-        <div>
-          <label>Selected Item Code</label>
-          <input id="inItemCode" readonly>
-        </div>
-
-        <div>
-          <label>Selected Item Name</label>
-          <input id="inProduct" readonly>
-        </div>
-
-        <div>
-          <label>Batch ID *</label>
-          <input id="inBatch" placeholder="B001">
-        </div>
-
-        <div>
-          <label>Production Date</label>
-          <input id="inProductionDate" type="date">
-        </div>
-
-        <div>
-          <label>Expiry Date</label>
-          <input id="inExpiryDate" type="date">
-        </div>
-
-        <div>
-          <label>Box Weight KG *</label>
-          <input id="inBoxWeight" type="number" step="0.01">
-        </div>
-
-        <div>
-          <label>Number of Boxes *</label>
-          <input id="inBoxes" type="number">
+          <div id="inwardPalletInfo" class="qr-result">Scan the Production QR to load pallet details.</div>
         </div>
 
         <div>
           <label>Operator</label>
-          <input id="inOperator" placeholder="Operator name">
-        </div>
-
-        <div>
-          <label>Team</label>
-          <select id="inTeam">
-            <option value="">Select Team</option>
-            <option>Production</option>
-            <option>Packing</option>
-            <option>QC</option>
-            <option>Dispatch</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Checkpoint</label>
-          <select id="inCheckpoint">
-            <option value="">Select Checkpoint</option>
-            <option>Production</option>
-            <option>Packing</option>
-            <option>QC</option>
-            <option>Dispatch</option>
-          </select>
+          <input id="inOperator" placeholder="Inward operator">
         </div>
 
       </div>
+
+      <div id="inwardReader" style="margin-top:15px"></div>
 
       <div class="actions">
-
-        <button class="btn" onclick="createPallet()">
-          ✅ CREATE INWARD + GENERATE QR
-        </button>
-
-        <button class="btn secondary" onclick="loadPalletNumbers()">
-          🔄 Refresh Pallet Queue
-        </button>
-
-      </div>
-
-      <div id="inwardQRResult" class="qr-result" style="display:none;margin-top:15px">
-        <h3>✅ Pallet QR Generated</h3>
-        <div id="inwardQRCode" style="display:flex;justify-content:center;margin:15px 0"></div>
-        <div id="inwardQRText" style="text-align:center;font-weight:bold"></div>
-        <div class="actions" style="justify-content:center">
-          <button class="btn" onclick="printInwardQR()">🖨️ PRINT QR LABEL</button>
-        </div>
-        <div class="muted" style="text-align:center">
-          Paste this QR label on the physical pallet. Storage location will be assigned later by Transfer/Warehouse team.
-        </div>
+        <button class="btn" onclick="confirmInward()">✅ CONFIRM INWARD</button>
+        <button class="btn secondary" onclick="loadFreeLocations()">🔄 Refresh Locations</button>
       </div>
 
     </div>
@@ -722,9 +745,16 @@ th{
 
         <div>
           <label>Destination Location</label>
-          <select id="trLocation">
+          <select id="trLocation" onchange="syncLocationText('trLocation','trLocationText')">
             <option value="">Loading...</option>
           </select>
+          <input id="trLocationText" placeholder="Type destination location" oninput="setLocationFromText('trLocation', this.value)">
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('trLocationText','trLocationReader','location')">📷 SCAN LOCATION QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('trLocationReader')">Stop</button>
+          </div>
+          <div id="trLocationReader" style="margin-top:8px"></div>
+
         </div>
 
         <div>
@@ -793,6 +823,13 @@ th{
             placeholder="PAL-000001"
             oninput="lookupOutwardPallet()"
           >
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('outPallet','outPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('outPalletReader')">Stop</button>
+          </div>
+          <div id="outPalletReader" style="margin-top:8px"></div>
+
         </div>
 
         <div>
@@ -870,6 +907,13 @@ th{
             placeholder="PAL-000001"
             oninput="lookupReprocessPallet()"
           >
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('rpPallet','rpPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('rpPalletReader')">Stop</button>
+          </div>
+          <div id="rpPalletReader" style="margin-top:8px"></div>
+
         </div>
 
         <div>
@@ -954,6 +998,13 @@ th{
         <div>
           <label>Pallet ID</label>
           <input id="waPallet" placeholder="PAL-000001">
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('waPallet','waPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('waPalletReader')">Stop</button>
+          </div>
+          <div id="waPalletReader" style="margin-top:8px"></div>
+
         </div>
 
         <div>
@@ -1498,6 +1549,15 @@ function showPage(
 
   if(
     page ===
+    "production"
+  ){
+
+    loadPalletNumbers();
+
+  }
+
+  if(
+    page ===
     "inward"
   ){
 
@@ -1757,6 +1817,105 @@ async function stopScanner(){
 
 }
 
+
+
+/* =========================================================
+   UNIVERSAL SCAN + TYPE INPUT SUPPORT
+   All pallet/location entry points support both methods.
+========================================================= */
+
+let targetScanner = null;
+let targetScannerReaderId = "";
+
+function setLocationFromText(selectId, value){
+  const v = String(value || "").trim().toUpperCase();
+  const select = document.getElementById(selectId);
+  if(!select || !v) return;
+
+  let found = false;
+  for(let i=0;i<select.options.length;i++){
+    if(String(select.options[i].value).toUpperCase() === v){
+      select.value = select.options[i].value;
+      found = true;
+      break;
+    }
+  }
+
+  // Keep the typed value available even if the free-location list has not loaded.
+  if(!found){
+    let opt = Array.from(select.options).find(o => o.value === v);
+    if(!opt){
+      opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    }
+    select.value = v;
+  }
+}
+
+function syncLocationText(selectId, textId){
+  const select=document.getElementById(selectId);
+  const text=document.getElementById(textId);
+  if(select && text) text.value=select.value || "";
+}
+
+async function startTargetScanner(targetId, readerId, mode){
+  try{
+    await stopTargetScanner(readerId);
+
+    targetScannerReaderId = readerId;
+    targetScanner = new Html5Qrcode(readerId);
+
+    await targetScanner.start(
+      {facingMode:"environment"},
+      {fps:10, qrbox:{width:250,height:250}},
+      async function(decodedText){
+        const value = parseQRValue(decodedText);
+        const target = document.getElementById(targetId);
+        if(target) target.value = value;
+
+        if(mode === "location"){
+          const selectId =
+            targetId === "inLocationText" ? "inLocation" :
+            targetId === "trLocationText" ? "trLocation" : "";
+
+          if(selectId){
+            setLocationFromText(selectId, value);
+          }
+        }
+
+        if(mode === "pallet"){
+          if(targetId === "outPallet") await lookupOutwardPallet();
+          if(targetId === "rpPallet") await lookupReprocessPallet();
+          if(targetId === "waPallet") await lookupWastagePallet();
+        }
+
+        await stopTargetScanner(readerId);
+      },
+      function(){}
+    );
+
+  }catch(e){
+    showMessage(
+      (mode === "location"
+        ? "Location camera could not start. Type location manually."
+        : "Pallet camera could not start. Type pallet ID manually."),
+      "error"
+    );
+  }
+}
+
+async function stopTargetScanner(readerId){
+  try{
+    if(targetScanner && (!readerId || targetScannerReaderId === readerId)){
+      await targetScanner.stop();
+      targetScanner.clear();
+      targetScanner=null;
+      targetScannerReaderId="";
+    }
+  }catch(e){}
+}
 
 /* =========================================================
    PALLET LOOKUP
@@ -2473,6 +2632,174 @@ function printInwardQR(){
 
   win.document.close();
 }
+
+async function createProduction(){
+
+  const palletId = document.getElementById("prodPallet").value.trim();
+  const batchId = document.getElementById("prodBatch").value.trim();
+  const itemCode = document.getElementById("prodItemCode").value.trim();
+  const product = document.getElementById("prodProduct").value.trim();
+  const productionDate = document.getElementById("prodProductionDate").value;
+  const expiryDate = document.getElementById("prodExpiryDate").value;
+  const boxWeight = document.getElementById("prodBoxWeight").value;
+  const boxes = document.getElementById("prodBoxes").value;
+  const operator = document.getElementById("prodOperator").value.trim();
+
+  if(!palletId || !batchId || !product || !productionDate || !boxWeight || !boxes){
+    showMessage("Please complete Pallet, Batch, Item, Production Date, Box Weight and Boxes.","error");
+    return;
+  }
+
+  try{
+    const data = await api("production",{
+      palletId,batchId,product,itemCode,productionDate,expiryDate,boxWeight,boxes,
+      operator,team:"Production",checkpoint:"Production"
+    });
+
+    showProductionQR(palletId);
+    await loadPalletNumbers();
+    showMessage(data.message || "Production completed. QR generated.","ok");
+  }catch(e){}
+}
+
+function showProductionQR(palletId){
+
+  const wrap=document.getElementById("productionQRResult");
+  const qr=document.getElementById("productionQRCode");
+  const text=document.getElementById("productionQRText");
+  if(!wrap || !qr || !text) return;
+
+  qr.innerHTML="";
+  text.textContent=palletId;
+
+  if(typeof QRCode !== "undefined"){
+    new QRCode(qr,{text:palletId,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
+  }else{
+    qr.innerHTML="<div>QR library unavailable. Pallet ID: "+escapeHtml(palletId)+"</div>";
+  }
+
+  wrap.style.display="block";
+  wrap.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function printProductionQR(){
+
+  const palletId=document.getElementById("prodPallet").value.trim();
+  const qrCanvas=document.querySelector("#productionQRCode canvas");
+  const qrImg=document.querySelector("#productionQRCode img");
+
+  let src="";
+  if(qrCanvas) src=qrCanvas.toDataURL("image/png");
+  else if(qrImg) src=qrImg.src;
+
+  if(!src){
+    showMessage("QR is not ready yet.","error");
+    return;
+  }
+
+  const win=window.open("","_blank","width=500,height=650");
+  win.document.write(`
+    <html>
+    <head><title>ABC Fruits - ${escapeHtml(palletId)}</title></head>
+    <body style="font-family:Arial;text-align:center;padding:30px">
+      <h2>🍎 ABC Fruits</h2>
+      <h3>Pallet QR</h3>
+      <img src="${src}" style="width:280px;height:280px">
+      <h2>${escapeHtml(palletId)}</h2>
+      <p>Paste this QR label on the physical pallet.</p>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+let inwardScanner=null;
+
+async function startInwardScanner(){
+
+  try{
+    await stopInwardScanner();
+
+    inwardScanner=new Html5Qrcode("inwardReader");
+
+    await inwardScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+        const palletId=parseQRValue(decodedText);
+        document.getElementById("inPallet").value=palletId;
+        await lookupInwardPallet();
+        await stopInwardScanner();
+      },
+      function(){}
+    );
+
+  }catch(e){
+    showMessage("Camera could not start. Enter Pallet ID manually.","error");
+  }
+}
+
+async function stopInwardScanner(){
+  try{
+    if(inwardScanner){
+      await inwardScanner.stop();
+      inwardScanner.clear();
+      inwardScanner=null;
+    }
+  }catch(e){}
+}
+
+async function lookupInwardPallet(){
+
+  const palletId=document.getElementById("inPallet").value.trim().toUpperCase();
+  if(!palletId) return;
+
+  try{
+    const data=await api("getPallet",{palletId});
+
+    document.getElementById("inwardPalletInfo").innerHTML=`
+      <strong>${escapeHtml(data.palletId)}</strong><br>
+      Item: ${escapeHtml(data.product || "-")}<br>
+      Item Code: ${escapeHtml(data.itemCode || "-")}<br>
+      Batch: ${escapeHtml(data.batchId || "-")}<br>
+      Production: ${escapeHtml(data.productionDate || "-")}<br>
+      Expiry: ${escapeHtml(data.expiryDate || "-")}<br>
+      Stock: ${Number(data.currentBoxes || 0).toLocaleString()} boxes /
+      ${Number(data.currentKG || 0).toLocaleString()} KG<br>
+      Current Location: ${escapeHtml(data.currentLocation || "NOT IN STORAGE")}
+    `;
+
+  }catch(e){
+    document.getElementById("inwardPalletInfo").textContent="Pallet not found.";
+  }
+}
+
+async function confirmInward(){
+
+  const palletId=document.getElementById("inPallet").value.trim().toUpperCase();
+  const location=document.getElementById("inLocation").value;
+  const operator=document.getElementById("inOperator").value.trim();
+
+  if(!palletId || !location){
+    showMessage("Scan pallet QR and select a storage location.","error");
+    return;
+  }
+
+  try{
+    const data=await api("inward",{
+      palletId,
+      location,
+      operator,
+      team:"INWARD",
+      checkpoint:"INWARD"
+    });
+
+    await goHomeAfterOperation(data.message || "Inward completed successfully.");
+  }catch(e){}
+}
+
+
 
 /* =========================================================
    TRANSFER LOOKUP
