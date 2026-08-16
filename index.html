@@ -39,6 +39,10 @@ h2 {
   margin-top: 5px;
 }
 
+h3 {
+  margin-top: 20px;
+}
+
 button {
   width: 100%;
   padding: 16px;
@@ -60,13 +64,13 @@ button {
   color: white;
 }
 
-.saveButton {
-  background: #059669;
+.locationButton {
+  background: #7c3aed;
   color: white;
 }
 
-.locationButton {
-  background: #7c3aed;
+.saveButton {
+  background: #059669;
   color: white;
 }
 
@@ -85,7 +89,8 @@ input {
   font-size: 18px;
 }
 
-#reader {
+#reader,
+#locationReader {
   width: 100%;
   margin-top: 15px;
 }
@@ -97,6 +102,22 @@ input {
   background: #f1f5f9;
   line-height: 1.8;
   word-break: break-word;
+}
+
+.palletCard {
+  margin-top: 15px;
+  padding: 16px;
+  background: #ecfdf5;
+  border-radius: 12px;
+  line-height: 1.8;
+}
+
+.locationCard {
+  margin-top: 15px;
+  padding: 16px;
+  background: #f5f3ff;
+  border-radius: 12px;
+  line-height: 1.8;
 }
 
 .success {
@@ -118,20 +139,11 @@ input {
   display: none;
 }
 
-.palletCard {
-  margin-top: 15px;
-  padding: 16px;
-  background: #ecfdf5;
-  border-radius: 12px;
-  line-height: 1.8;
-}
-
-.locationCard {
-  margin-top: 15px;
-  padding: 16px;
-  background: #f5f3ff;
-  border-radius: 12px;
-  line-height: 1.8;
+.small {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 12px;
+  text-align: center;
 }
 
 </style>
@@ -147,13 +159,13 @@ input {
 <h2>❄️ Cold Room Scanner</h2>
 
 
-<!-- =========================================
-     MAIN SCREEN
-     ========================================= -->
+<!-- ==================================================
+     HOME
+================================================== -->
 
 <div id="mainScreen">
 
-  <h3>Select Pallet Entry</h3>
+  <h3>Pallet Entry</h3>
 
   <button
     class="scanButton"
@@ -174,15 +186,15 @@ input {
 </div>
 
 
-<!-- =========================================
+<!-- ==================================================
      PALLET CAMERA
-     ========================================= -->
+================================================== -->
 
 <div
   id="palletScannerScreen"
   class="hidden">
 
-  <h3>Scan Pallet QR</h3>
+  <h3>📷 Scan Pallet QR</h3>
 
   <div id="reader"></div>
 
@@ -197,20 +209,20 @@ input {
 </div>
 
 
-<!-- =========================================
-     PALLET TYPE
-     ========================================= -->
+<!-- ==================================================
+     PALLET MANUAL ENTRY
+================================================== -->
 
 <div
   id="palletTypeScreen"
   class="hidden">
 
-  <h3>Enter Pallet ID</h3>
+  <h3>⌨️ Enter Pallet ID</h3>
 
   <input
     id="palletInput"
     type="text"
-    placeholder="Example: PAL-000001"
+    placeholder="PAL-000001"
     autocomplete="off"
     autocapitalize="characters">
 
@@ -233,9 +245,9 @@ input {
 </div>
 
 
-<!-- =========================================
+<!-- ==================================================
      PALLET RESULT
-     ========================================= -->
+================================================== -->
 
 <div
   id="palletResultScreen"
@@ -246,7 +258,6 @@ input {
     class="palletCard">
   </div>
 
-
   <button
     class="locationButton"
     onclick="showLocationScreen()">
@@ -254,7 +265,6 @@ input {
     📍 ASSIGN LOCATION
 
   </button>
-
 
   <button
     class="closeButton"
@@ -267,9 +277,9 @@ input {
 </div>
 
 
-<!-- =========================================
-     LOCATION SCREEN
-     ========================================= -->
+<!-- ==================================================
+     LOCATION MENU
+================================================== -->
 
 <div
   id="locationScreen"
@@ -282,7 +292,6 @@ input {
     class="result">
   </div>
 
-
   <button
     class="scanButton"
     onclick="startLocationScanner()">
@@ -291,7 +300,6 @@ input {
 
   </button>
 
-
   <button
     class="typeButton"
     onclick="showLocationTypeScreen()">
@@ -299,7 +307,6 @@ input {
     ⌨️ TYPE LOCATION
 
   </button>
-
 
   <button
     class="closeButton"
@@ -312,15 +319,15 @@ input {
 </div>
 
 
-<!-- =========================================
+<!-- ==================================================
      LOCATION CAMERA
-     ========================================= -->
+================================================== -->
 
 <div
   id="locationScannerScreen"
   class="hidden">
 
-  <h3>Scan Location QR</h3>
+  <h3>📍 Scan Location QR</h3>
 
   <div id="locationReader"></div>
 
@@ -335,20 +342,20 @@ input {
 </div>
 
 
-<!-- =========================================
-     LOCATION TYPE
-     ========================================= -->
+<!-- ==================================================
+     LOCATION MANUAL ENTRY
+================================================== -->
 
 <div
   id="locationTypeScreen"
   class="hidden">
 
-  <h3>Enter Location</h3>
+  <h3>⌨️ Enter Location</h3>
 
   <input
     id="locationInput"
     type="text"
-    placeholder="Example: CR01-A01-01"
+    placeholder="CR01-A01-01"
     autocomplete="off"
     autocapitalize="characters">
 
@@ -356,7 +363,7 @@ input {
     class="saveButton"
     onclick="submitLocation()">
 
-    💾 SAVE LOCATION
+    ➡️ CONTINUE
 
   </button>
 
@@ -371,19 +378,20 @@ input {
 </div>
 
 
-<!-- =========================================
+<!-- ==================================================
      LOCATION CONFIRM
-     ========================================= -->
+================================================== -->
 
 <div
   id="locationConfirmScreen"
   class="hidden">
 
+  <h3>Confirm Location</h3>
+
   <div
     id="locationResult"
     class="locationCard">
   </div>
-
 
   <button
     class="saveButton"
@@ -392,7 +400,6 @@ input {
     ✅ CONFIRM & SAVE
 
   </button>
-
 
   <button
     class="closeButton"
@@ -405,9 +412,9 @@ input {
 </div>
 
 
-<!-- =========================================
+<!-- ==================================================
      FINAL RESULT
-     ========================================= -->
+================================================== -->
 
 <div
   id="finalScreen"
@@ -417,7 +424,6 @@ input {
     id="finalResult"
     class="result">
   </div>
-
 
   <button
     class="typeButton"
@@ -430,9 +436,9 @@ input {
 </div>
 
 
-<!-- =========================================
-     MESSAGE
-     ========================================= -->
+<!-- ==================================================
+     STATUS
+================================================== -->
 
 <div
   id="message"
@@ -442,40 +448,44 @@ input {
 
 </div>
 
+<div class="small">
+  ABC Fruits Inventory System
+</div>
+
 </div>
 
 
 <script>
 
 
-/************************************************
- * APPS SCRIPT API
- ************************************************/
+/*******************************************************
+ * GOOGLE APPS SCRIPT URL
+ *******************************************************/
 
 const API_URL =
-"https://script.google.com/macros/s/AKfycby_4imPNgRpoeG9gZ8tfsYcmGye99kaQnW7eGpFQwKPCludkvN-WQxRYZikXkJaD-nt/exec";
+"https://script.google.com/macros/s/AKfycbyVmzPdmoHxO6a0jvhhB2b30-yogaTjPcMDKVxb1NVeAmTJkotvMIOgVgVRW0iYABo/exec";
 
 
-/************************************************
+/*******************************************************
  * VARIABLES
- ************************************************/
+ *******************************************************/
 
 let scanner = null;
-
-let scannerType = "";
 
 let currentPallet = null;
 
 let currentLocation = "";
 
+let requestTimer = null;
 
-/************************************************
- * SCREEN CONTROL
- ************************************************/
+
+/*******************************************************
+ * HIDE ALL SCREENS
+ *******************************************************/
 
 function hideAllScreens() {
 
-  const screens = [
+  const ids = [
 
     "mainScreen",
 
@@ -498,22 +508,20 @@ function hideAllScreens() {
   ];
 
 
-  screens.forEach(
-    function(id) {
+  ids.forEach(function(id) {
 
-      document
-        .getElementById(id)
-        .classList.add("hidden");
+    document
+      .getElementById(id)
+      .classList.add("hidden");
 
-    }
-  );
+  });
 
 }
 
 
-/************************************************
- * PALLET SCANNER
- ************************************************/
+/*******************************************************
+ * PALLET CAMERA
+ *******************************************************/
 
 function startPalletScanner() {
 
@@ -523,9 +531,7 @@ function startPalletScanner() {
 
 
   document
-    .getElementById(
-      "palletScannerScreen"
-    )
+    .getElementById("palletScannerScreen")
     .classList.remove("hidden");
 
 
@@ -534,14 +540,8 @@ function startPalletScanner() {
   );
 
 
-  scannerType =
-    "pallet";
-
-
   scanner =
-    new Html5Qrcode(
-      "reader"
-    );
+    new Html5Qrcode("reader");
 
 
   scanner.start(
@@ -563,15 +563,12 @@ function startPalletScanner() {
     function(decodedText) {
 
       const palletId =
-        String(
-          decodedText
-        )
-        .trim()
-        .toUpperCase();
+        String(decodedText)
+          .trim()
+          .toUpperCase();
 
 
       stopScanner();
-
 
       loadPallet(
         palletId
@@ -581,7 +578,7 @@ function startPalletScanner() {
 
     function(errorMessage) {
 
-      // Normal scan messages ignored
+      // Ignore normal scanner messages
 
     }
 
@@ -590,7 +587,7 @@ function startPalletScanner() {
   .catch(function(error) {
 
     showError(
-      "Pallet camera error: " +
+      "Camera error: " +
       error
     );
 
@@ -599,9 +596,9 @@ function startPalletScanner() {
 }
 
 
-/************************************************
- * LOCATION SCANNER
- ************************************************/
+/*******************************************************
+ * LOCATION CAMERA
+ *******************************************************/
 
 function startLocationScanner() {
 
@@ -611,19 +608,13 @@ function startLocationScanner() {
 
 
   document
-    .getElementById(
-      "locationScannerScreen"
-    )
+    .getElementById("locationScannerScreen")
     .classList.remove("hidden");
 
 
   setMessage(
     "📷 Scan Location QR..."
   );
-
-
-  scannerType =
-    "location";
 
 
   scanner =
@@ -651,15 +642,12 @@ function startLocationScanner() {
     function(decodedText) {
 
       const location =
-        String(
-          decodedText
-        )
-        .trim()
-        .toUpperCase();
+        String(decodedText)
+          .trim()
+          .toUpperCase();
 
 
       stopScanner();
-
 
       confirmLocation(
         location
@@ -669,7 +657,7 @@ function startLocationScanner() {
 
     function(errorMessage) {
 
-      // Normal scan messages ignored
+      // Ignore normal scanner messages
 
     }
 
@@ -687,16 +675,14 @@ function startLocationScanner() {
 }
 
 
-/************************************************
- * STOP SCANNER
- ************************************************/
+/*******************************************************
+ * STOP CAMERA
+ *******************************************************/
 
 function stopScanner() {
 
   if (!scanner) {
-
     return;
-
   }
 
 
@@ -720,9 +706,9 @@ function stopScanner() {
 }
 
 
-/************************************************
- * PALLET TYPE SCREEN
- ************************************************/
+/*******************************************************
+ * PALLET MANUAL SCREEN
+ *******************************************************/
 
 function showPalletTypeScreen() {
 
@@ -732,9 +718,7 @@ function showPalletTypeScreen() {
 
 
   document
-    .getElementById(
-      "palletTypeScreen"
-    )
+    .getElementById("palletTypeScreen")
     .classList.remove("hidden");
 
 
@@ -756,9 +740,9 @@ function showPalletTypeScreen() {
 }
 
 
-/************************************************
+/*******************************************************
  * SUBMIT PALLET
- ************************************************/
+ *******************************************************/
 
 function submitPallet() {
 
@@ -790,9 +774,9 @@ function submitPallet() {
 }
 
 
-/************************************************
- * LOAD PALLET
- ************************************************/
+/*******************************************************
+ * GET PALLET FROM GOOGLE SHEET
+ *******************************************************/
 
 function loadPallet(
   palletId
@@ -816,7 +800,7 @@ function loadPallet(
 
       '<span class="info">' +
 
-      '🔍 Checking ' +
+      '🔍 Checking pallet ' +
 
       '<b>' +
 
@@ -835,12 +819,17 @@ function loadPallet(
 
 
   const callbackName =
-    "palletCallback_" +
+    "abcPallet_" +
     Date.now();
 
 
   window[callbackName] =
     function(data) {
+
+      clearTimeout(
+        requestTimer
+      );
+
 
       if (
         data &&
@@ -849,6 +838,7 @@ function loadPallet(
 
         currentPallet =
           data;
+
 
         showPallet(
           data
@@ -862,7 +852,9 @@ function loadPallet(
 
           data &&
           data.message
+
             ? data.message
+
             : "Pallet not found."
 
         );
@@ -870,7 +862,9 @@ function loadPallet(
       }
 
 
-      cleanup();
+      cleanup(
+        callbackName
+      );
 
     };
 
@@ -908,22 +902,34 @@ function loadPallet(
     callbackName;
 
 
-  script.src =
-    url;
+  script.type =
+    "text/javascript";
 
 
   script.async =
     true;
 
 
+  script.src =
+    url;
+
+
   script.onerror =
     function() {
 
-      showError(
-        "Google Apps Script request failed."
+      clearTimeout(
+        requestTimer
       );
 
-      cleanup();
+
+      showError(
+        "Could not connect to ABC Fruits server."
+      );
+
+
+      cleanup(
+        callbackName
+      );
 
     };
 
@@ -935,33 +941,26 @@ function loadPallet(
     );
 
 
-  function cleanup() {
+  requestTimer =
+    setTimeout(function() {
 
-    delete window[
-      callbackName
-    ];
-
-
-    const oldScript =
-      document.getElementById(
-        callbackName
+      showError(
+        "Google Apps Script response timeout."
       );
 
 
-    if (oldScript) {
+      cleanup(
+        callbackName
+      );
 
-      oldScript.remove();
-
-    }
-
-  }
+    }, 15000);
 
 }
 
 
-/************************************************
+/*******************************************************
  * SHOW PALLET
- ************************************************/
+ *******************************************************/
 
 function showPallet(
   data
@@ -989,7 +988,7 @@ function showPallet(
 
       '<br>' +
 
-      '<b>Batch:</b> ' +
+      '<b>Batch ID:</b> ' +
 
       safe(
         data.batchId
@@ -1079,15 +1078,28 @@ function showPallet(
 }
 
 
-/************************************************
- * LOCATION SCREEN
- ************************************************/
+/*******************************************************
+ * LOCATION MENU
+ *******************************************************/
 
 function showLocationScreen() {
 
   stopScanner();
 
   hideAllScreens();
+
+
+  if (
+    !currentPallet
+  ) {
+
+    showError(
+      "Pallet information is missing."
+    );
+
+    return;
+
+  }
 
 
   document
@@ -1115,6 +1127,14 @@ function showLocationScreen() {
 
       safe(
         currentPallet.product
+      ) +
+
+      '<br>' +
+
+      '<b>Current Location:</b> ' +
+
+      safe(
+        currentPallet.currentLocation
       );
 
 
@@ -1125,9 +1145,9 @@ function showLocationScreen() {
 }
 
 
-/************************************************
- * LOCATION TYPE SCREEN
- ************************************************/
+/*******************************************************
+ * LOCATION MANUAL ENTRY
+ *******************************************************/
 
 function showLocationTypeScreen() {
 
@@ -1161,9 +1181,9 @@ function showLocationTypeScreen() {
 }
 
 
-/************************************************
+/*******************************************************
  * SUBMIT LOCATION
- ************************************************/
+ *******************************************************/
 
 function submitLocation() {
 
@@ -1195,9 +1215,9 @@ function submitLocation() {
 }
 
 
-/************************************************
+/*******************************************************
  * CONFIRM LOCATION
- ************************************************/
+ *******************************************************/
 
 function confirmLocation(
   location
@@ -1259,15 +1279,15 @@ function confirmLocation(
 
 
   setMessage(
-    "Check the location before saving."
+    "Check location before saving."
   );
 
 }
 
 
-/************************************************
+/*******************************************************
  * SAVE LOCATION
- ************************************************/
+ *******************************************************/
 
 function saveLocation() {
 
@@ -1288,7 +1308,7 @@ function saveLocation() {
   if (!currentLocation) {
 
     showError(
-      "Location missing."
+      "Location is missing."
     );
 
     return;
@@ -1319,18 +1339,42 @@ function saveLocation() {
       '</span>';
 
 
+  setMessage(
+    "Updating Google Sheet..."
+  );
+
+
   const callbackName =
-    "locationCallback_" +
+    "abcLocation_" +
     Date.now();
 
 
   window[callbackName] =
     function(data) {
 
+      clearTimeout(
+        requestTimer
+      );
+
+
+      console.log(
+        "LOCATION RESPONSE:",
+        data
+      );
+
+
       if (
         data &&
         data.ok === true
       ) {
+
+        /*
+         * Update local pallet data
+         */
+
+        currentPallet.currentLocation =
+          data.location;
+
 
         document
           .getElementById(
@@ -1360,12 +1404,41 @@ function saveLocation() {
               data.location
             ) +
 
+            '<br>' +
+
+            '<b>Action:</b> ' +
+
+            safe(
+              data.action
+            ) +
+
+            '<br>' +
+
+            '<b>Boxes:</b> ' +
+
+            safe(
+              data.boxes
+            ) +
+
+            '<br>' +
+
+            '<b>KG:</b> ' +
+
+            safe(
+              data.kg
+            ) +
+
             '<br><br>' +
 
-            'Google Sheet updated successfully.';
+            '✅ PALLET_MASTER updated' +
+
+            '<br>' +
+
+            '✅ TRANSACTION recorded';
+
 
         setMessage(
-          "✅ Location saved successfully."
+          "✅ Google Sheet updated successfully."
         );
 
       }
@@ -1376,7 +1449,9 @@ function saveLocation() {
 
           data &&
           data.message
+
             ? data.message
+
             : "Location update failed."
 
         );
@@ -1384,10 +1459,19 @@ function saveLocation() {
       }
 
 
-      cleanup();
+      cleanup(
+        callbackName
+      );
 
     };
 
+
+  /*
+   * IMPORTANT:
+   *
+   * Empty operator and dispatch number
+   * are sent for now.
+   */
 
   const url =
 
@@ -1407,6 +1491,18 @@ function saveLocation() {
       currentLocation
     ) +
 
+    "&operator=" +
+
+    encodeURIComponent(
+      ""
+    ) +
+
+    "&dispatchNo=" +
+
+    encodeURIComponent(
+      ""
+    ) +
+
     "&prefix=" +
 
     encodeURIComponent(
@@ -1416,6 +1512,12 @@ function saveLocation() {
     "&t=" +
 
     Date.now();
+
+
+  console.log(
+    "LOCATION SAVE URL:",
+    url
+  );
 
 
   const script =
@@ -1428,22 +1530,34 @@ function saveLocation() {
     callbackName;
 
 
-  script.src =
-    url;
+  script.type =
+    "text/javascript";
 
 
   script.async =
     true;
 
 
+  script.src =
+    url;
+
+
   script.onerror =
     function() {
 
-      showError(
-        "Google Apps Script location update failed."
+      clearTimeout(
+        requestTimer
       );
 
-      cleanup();
+
+      showError(
+        "Could not connect to ABC Fruits server while saving location."
+      );
+
+
+      cleanup(
+        callbackName
+      );
 
     };
 
@@ -1455,33 +1569,26 @@ function saveLocation() {
     );
 
 
-  function cleanup() {
+  requestTimer =
+    setTimeout(function() {
 
-    delete window[
-      callbackName
-    ];
-
-
-    const oldScript =
-      document.getElementById(
-        callbackName
+      showError(
+        "Location save response timeout."
       );
 
 
-    if (oldScript) {
+      cleanup(
+        callbackName
+      );
 
-      oldScript.remove();
-
-    }
-
-  }
+    }, 15000);
 
 }
 
 
-/************************************************
- * SHOW PALLET RESULT
- ************************************************/
+/*******************************************************
+ * BACK TO PALLET RESULT
+ *******************************************************/
 
 function showPalletResult() {
 
@@ -1499,17 +1606,21 @@ function showPalletResult() {
 }
 
 
-/************************************************
+/*******************************************************
  * BACK HOME
- ************************************************/
+ *******************************************************/
 
 function backHome() {
 
   stopScanner();
 
-  currentPallet = null;
 
-  currentLocation = "";
+  currentPallet =
+    null;
+
+
+  currentLocation =
+    "";
 
 
   hideAllScreens();
@@ -1529,9 +1640,9 @@ function backHome() {
 }
 
 
-/************************************************
- * ERROR
- ************************************************/
+/*******************************************************
+ * GENERIC ERROR
+ *******************************************************/
 
 function showError(
   message
@@ -1573,9 +1684,53 @@ function showError(
 }
 
 
-/************************************************
- * MESSAGE
- ************************************************/
+/*******************************************************
+ * CLEANUP JSONP
+ *******************************************************/
+
+function cleanup(
+  callbackName
+) {
+
+  try {
+
+    delete window[
+      callbackName
+    ];
+
+  }
+
+  catch (error) {
+
+    console.log(
+      error
+    );
+
+  }
+
+
+  const script =
+    document.getElementById(
+      callbackName
+    );
+
+
+  if (script) {
+
+    script.remove();
+
+  }
+
+
+  requestTimer =
+    null;
+
+}
+
+
+/*******************************************************
+ * STATUS MESSAGE
+ *******************************************************/
 
 function setMessage(
   message
@@ -1591,9 +1746,9 @@ function setMessage(
 }
 
 
-/************************************************
+/*******************************************************
  * SAFE VALUE
- ************************************************/
+ *******************************************************/
 
 function safe(
   value
@@ -1617,9 +1772,9 @@ function safe(
 }
 
 
-/************************************************
+/*******************************************************
  * ESCAPE HTML
- ************************************************/
+ *******************************************************/
 
 function escapeHtml(
   value
