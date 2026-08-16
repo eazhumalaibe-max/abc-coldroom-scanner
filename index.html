@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
 
 <meta name="viewport"
-      content="width=device-width, initial-scale=1">
+content="width=device-width,initial-scale=1">
 
-<title>ABC Fruits Cold Room Scanner</title>
+<title>ABC Fruits Inventory</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -29,94 +36,72 @@ body {
   box-shadow: 0 2px 12px #0002;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 5px;
-}
-
+h1,
 h2 {
   text-align: center;
-  margin-top: 5px;
-}
-
-h3 {
-  margin-top: 20px;
 }
 
 button {
   width: 100%;
-  padding: 16px;
-  margin-top: 12px;
-  border: none;
+  padding: 15px;
+  margin-top: 10px;
+  border: 0;
   border-radius: 10px;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
 }
 
-.scanButton {
-  background: #111827;
-  color: white;
+input,
+select {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 9px;
+  font-size: 16px;
 }
 
-.typeButton {
-  background: #2563eb;
-  color: white;
+.tile {
+  padding: 20px;
+  font-size: 18px;
 }
 
-.locationButton {
-  background: #7c3aed;
-  color: white;
-}
-
-.saveButton {
+.green {
   background: #059669;
   color: white;
 }
 
-.closeButton {
+.blue {
+  background: #2563eb;
+  color: white;
+}
+
+.red {
+  background: #dc2626;
+  color: white;
+}
+
+.purple {
+  background: #7c3aed;
+  color: white;
+}
+
+.black {
+  background: #111827;
+  color: white;
+}
+
+.gray {
   background: #6b7280;
   color: white;
 }
 
-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 15px;
-  margin-top: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 18px;
-}
-
-#reader,
-#locationReader {
-  width: 100%;
-  margin-top: 15px;
-}
-
 .result {
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: 12px;
+  margin-top: 15px;
+  padding: 15px;
   background: #f1f5f9;
-  line-height: 1.8;
-  word-break: break-word;
-}
-
-.palletCard {
-  margin-top: 15px;
-  padding: 16px;
-  background: #ecfdf5;
-  border-radius: 12px;
-  line-height: 1.8;
-}
-
-.locationCard {
-  margin-top: 15px;
-  padding: 16px;
-  background: #f5f3ff;
-  border-radius: 12px;
+  border-radius: 10px;
   line-height: 1.8;
 }
 
@@ -130,20 +115,47 @@ input {
   font-weight: bold;
 }
 
-.info {
-  color: #1d4ed8;
-  font-weight: bold;
+.free {
+  padding: 11px;
+  margin: 6px 0;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  cursor: pointer;
+}
+
+.selected {
+  background: #dbeafe;
+  border: 2px solid #2563eb;
 }
 
 .hidden {
   display: none;
 }
 
-.small {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 12px;
+#reader {
+  margin-top: 15px;
+}
+
+.qrbox {
   text-align: center;
+  padding: 15px;
+  background: white;
+  margin-top: 15px;
+}
+
+.label {
+  border: 2px solid #111;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.small {
+  text-align: center;
+  color: #777;
+  font-size: 12px;
+  margin-top: 15px;
 }
 
 </style>
@@ -154,302 +166,488 @@ input {
 
 <div class="card">
 
-<h1>🍎 ABC Fruits</h1>
+<h1>🍎 ABC FRUITS</h1>
 
-<h2>❄️ Cold Room Scanner</h2>
-
-
-<!-- ==================================================
-     HOME
-================================================== -->
-
-<div id="mainScreen">
-
-  <h3>Pallet Entry</h3>
-
-  <button
-    class="scanButton"
-    onclick="startPalletScanner()">
-
-    📷 SCAN PALLET QR
-
-  </button>
-
-  <button
-    class="typeButton"
-    onclick="showPalletTypeScreen()">
-
-    ⌨️ TYPE PALLET ID
-
-  </button>
-
-</div>
+<h2>Inventory System</h2>
 
 
-<!-- ==================================================
-     PALLET CAMERA
-================================================== -->
+<!-- HOME -->
 
-<div
-  id="palletScannerScreen"
-  class="hidden">
+<div id="home">
 
-  <h3>📷 Scan Pallet QR</h3>
+<button
+class="tile purple"
+onclick="newPalletPage()">
 
-  <div id="reader"></div>
+🆕 PALLET MASTER / QR
 
-  <button
-    class="closeButton"
-    onclick="stopScanner()">
+</button>
 
-    ✖ CLOSE CAMERA
+<button
+class="tile green"
+onclick="modePage('INWARD')">
 
-  </button>
+🟢 INWARD
+
+</button>
+
+<button
+class="tile blue"
+onclick="modePage('TRANSFER')">
+
+🔵 TRANSFER
+
+</button>
+
+<button
+class="tile red"
+onclick="modePage('OUTWARD')">
+
+🔴 OUTWARD
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     PALLET MANUAL ENTRY
-================================================== -->
+<!-- MODE PAGE -->
 
 <div
-  id="palletTypeScreen"
-  class="hidden">
+id="modePage"
+class="hidden">
 
-  <h3>⌨️ Enter Pallet ID</h3>
+<h3 id="modeTitle"></h3>
 
-  <input
-    id="palletInput"
-    type="text"
-    placeholder="PAL-000001"
-    autocomplete="off"
-    autocapitalize="characters">
+<button
+class="black"
+onclick="scanPallet()">
 
-  <button
-    class="typeButton"
-    onclick="submitPallet()">
+📷 SCAN PALLET QR
 
-    🔍 CHECK PALLET
+</button>
 
-  </button>
+<button
+onclick="manualPallet()">
 
-  <button
-    class="closeButton"
-    onclick="backHome()">
+⌨️ TYPE PALLET ID
 
-    ← BACK
+</button>
 
-  </button>
+<button
+class="gray"
+onclick="home()">
+
+← BACK
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     PALLET RESULT
-================================================== -->
+<!-- MANUAL PALLET -->
 
 <div
-  id="palletResultScreen"
-  class="hidden">
+id="manualPage"
+class="hidden">
 
-  <div
-    id="palletResult"
-    class="palletCard">
-  </div>
+<h3>Enter Pallet ID</h3>
 
-  <button
-    class="locationButton"
-    onclick="showLocationScreen()">
+<input
+id="manualPalletId"
+placeholder="PAL-000001">
 
-    📍 ASSIGN LOCATION
+<button
+onclick="manualPalletSubmit()">
 
-  </button>
+CHECK PALLET
 
-  <button
-    class="closeButton"
-    onclick="backHome()">
+</button>
 
-    ← BACK
+<button
+class="gray"
+onclick="home()">
 
-  </button>
+← BACK
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     LOCATION MENU
-================================================== -->
+<!-- CAMERA -->
 
 <div
-  id="locationScreen"
-  class="hidden">
+id="cameraPage"
+class="hidden">
 
-  <h3>📍 Assign Location</h3>
+<h3 id="cameraTitle">
+Scan QR
+</h3>
 
-  <div
-    id="selectedPallet"
-    class="result">
-  </div>
+<div id="reader"></div>
 
-  <button
-    class="scanButton"
-    onclick="startLocationScanner()">
+<button
+class="gray"
+onclick="stopCamera();home()">
 
-    📷 SCAN LOCATION QR
+CLOSE CAMERA
 
-  </button>
-
-  <button
-    class="typeButton"
-    onclick="showLocationTypeScreen()">
-
-    ⌨️ TYPE LOCATION
-
-  </button>
-
-  <button
-    class="closeButton"
-    onclick="showPalletResult()">
-
-    ← BACK
-
-  </button>
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     LOCATION CAMERA
-================================================== -->
+<!-- PALLET -->
 
 <div
-  id="locationScannerScreen"
-  class="hidden">
+id="palletPage"
+class="hidden">
 
-  <h3>📍 Scan Location QR</h3>
+<h3>PALLET DETAILS</h3>
 
-  <div id="locationReader"></div>
+<div
+id="palletData"
+class="result">
+</div>
 
-  <button
-    class="closeButton"
-    onclick="stopScanner()">
+<button
+id="palletAction"
+onclick="palletAction()">
 
-    ✖ CLOSE CAMERA
+NEXT
 
-  </button>
+</button>
+
+<button
+class="gray"
+onclick="home()">
+
+HOME
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     LOCATION MANUAL ENTRY
-================================================== -->
+<!-- LOCATION -->
 
 <div
-  id="locationTypeScreen"
-  class="hidden">
+id="locationPage"
+class="hidden">
 
-  <h3>⌨️ Enter Location</h3>
+<h3>📍 SELECT LOCATION</h3>
 
-  <input
-    id="locationInput"
-    type="text"
-    placeholder="CR01-A01-01"
-    autocomplete="off"
-    autocapitalize="characters">
+<div
+id="locationInfo"
+class="result">
+</div>
 
-  <button
-    class="saveButton"
-    onclick="submitLocation()">
+<button
+class="black"
+onclick="scanLocation()">
 
-    ➡️ CONTINUE
+📷 SCAN LOCATION QR
 
-  </button>
+</button>
 
-  <button
-    class="closeButton"
-    onclick="showLocationScreen()">
+<button
+onclick="manualLocation()">
 
-    ← BACK
+⌨️ TYPE LOCATION
 
-  </button>
+</button>
+
+<div
+id="freeLocations"
+class="result">
+
+Loading free locations...
+
+</div>
+
+<button
+class="gray"
+onclick="showPallet()">
+
+← BACK
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     LOCATION CONFIRM
-================================================== -->
+<!-- TRANSFER -->
 
 <div
-  id="locationConfirmScreen"
-  class="hidden">
+id="transferPage"
+class="hidden">
 
-  <h3>Confirm Location</h3>
+<h3>🔵 TRANSFER</h3>
 
-  <div
-    id="locationResult"
-    class="locationCard">
-  </div>
+<div
+id="transferInfo"
+class="result">
+</div>
 
-  <button
-    class="saveButton"
-    onclick="saveLocation()">
+<button
+class="black"
+onclick="scanTransferLocation()">
 
-    ✅ CONFIRM & SAVE
+📷 SCAN DESTINATION QR
 
-  </button>
+</button>
 
-  <button
-    class="closeButton"
-    onclick="showLocationScreen()">
+<button
+onclick="manualTransferLocation()">
 
-    ← CHANGE LOCATION
+⌨️ TYPE DESTINATION
 
-  </button>
+</button>
+
+<div
+id="transferLocation"
+class="result">
+
+No destination selected.
+
+</div>
+
+<button
+class="green"
+onclick="saveTransfer()">
+
+✅ CONFIRM TRANSFER
+
+</button>
+
+<button
+class="gray"
+onclick="showPallet()">
+
+← BACK
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     FINAL RESULT
-================================================== -->
+<!-- OUTWARD -->
 
 <div
-  id="finalScreen"
-  class="hidden">
+id="outwardPage"
+class="hidden">
 
-  <div
-    id="finalResult"
-    class="result">
-  </div>
+<h3>🔴 OUTWARD</h3>
 
-  <button
-    class="typeButton"
-    onclick="backHome()">
+<div
+id="outwardInfo"
+class="result">
+</div>
 
-    🔄 SCAN ANOTHER PALLET
+<input
+id="outwardBoxes"
+type="number"
+placeholder="Outward Boxes">
 
-  </button>
+<input
+id="dispatchNo"
+placeholder="Dispatch No">
+
+<button
+class="red"
+onclick="saveOutward()">
+
+✅ CONFIRM OUTWARD
+
+</button>
+
+<button
+class="gray"
+onclick="showPallet()">
+
+← BACK
+
+</button>
 
 </div>
 
 
-<!-- ==================================================
-     STATUS
-================================================== -->
+<!-- NEW PALLET -->
 
 <div
-  id="message"
-  class="result">
+id="newPalletPage"
+class="hidden">
 
-  Ready.
+<h3>🆕 PALLET MASTER</h3>
+
+<div
+id="nextNumber"
+class="result">
+
+Loading...
+
+</div>
+
+
+<h4>Previously Used Pallet</h4>
+
+<select
+id="oldPallet">
+
+<option value="">
+Select previous OUT pallet
+</option>
+
+</select>
+
+
+<input
+id="newBatch"
+placeholder="Batch ID">
+
+
+<input
+id="newProduct"
+placeholder="Product">
+
+
+<label>
+Production Date
+</label>
+
+<input
+id="newProductionDate"
+type="date">
+
+
+<label>
+Expiry Date
+</label>
+
+<input
+id="newExpiryDate"
+type="date">
+
+
+<input
+id="newWeight"
+type="number"
+placeholder="Box Weight KG">
+
+
+<input
+id="newBoxes"
+type="number"
+placeholder="Number of Boxes">
+
+
+<h4>Free Location</h4>
+
+<div
+id="newLocations"
+class="result">
+
+Loading...
+
+</div>
+
+
+<button
+class="black"
+onclick="scanNewLocation()">
+
+📷 SCAN LOCATION QR
+
+</button>
+
+
+<div
+id="selectedNewLocation"
+class="result">
+
+No location selected.
+
+</div>
+
+
+<button
+class="green"
+onclick="createPallet()">
+
+💾 SAVE PALLET + GENERATE QR
+
+</button>
+
+
+<button
+class="gray"
+onclick="home()">
+
+← BACK
+
+</button>
+
+</div>
+
+
+<!-- QR PRINT -->
+
+<div
+id="qrPage"
+class="hidden">
+
+<h3>✅ PALLET CREATED</h3>
+
+<div
+id="qrLabel"
+class="label">
+
+<div
+id="qrcode"
+class="qrbox">
+</div>
+
+<h2
+id="qrPalletId">
+</h2>
+
+<div
+id="qrDetails">
+</div>
+
+</div>
+
+
+<button
+class="black"
+onclick="window.print()">
+
+🖨️ PRINT QR LABEL
+
+</button>
+
+
+<button
+class="green"
+onclick="home()">
+
+DONE
+
+</button>
+
+</div>
+
+
+<div
+id="message"
+class="result">
+
+Ready.
 
 </div>
 
 <div class="small">
-  ABC Fruits Inventory System
+ABC Fruits Inventory System
 </div>
 
 </div>
@@ -458,1358 +656,1829 @@ input {
 <script>
 
 
-/*******************************************************
- * GOOGLE APPS SCRIPT URL
- *******************************************************/
+/************************************************
+ * API URL
+ ************************************************/
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycbyVmzPdmoHxO6a0jvhhB2b30-yogaTjPcMDKVxb1NVeAmTJkotvMIOgVgVRW0iYABo/exec";
 
 
-/*******************************************************
+/************************************************
  * VARIABLES
- *******************************************************/
+ ************************************************/
 
 let scanner = null;
 
+let currentMode = "";
+
 let currentPallet = null;
 
-let currentLocation = "";
+let selectedLocation = "";
 
-let requestTimer = null;
-
-
-/*******************************************************
- * HIDE ALL SCREENS
- *******************************************************/
-
-function hideAllScreens() {
-
-  const ids = [
-
-    "mainScreen",
-
-    "palletScannerScreen",
-
-    "palletTypeScreen",
-
-    "palletResultScreen",
-
-    "locationScreen",
-
-    "locationScannerScreen",
-
-    "locationTypeScreen",
-
-    "locationConfirmScreen",
-
-    "finalScreen"
-
-  ];
+let selectedNewLocation = "";
 
 
-  ids.forEach(function(id) {
+/************************************************
+ * SCREENS
+ ************************************************/
 
-    document
-      .getElementById(id)
-      .classList.add("hidden");
+const screenIds = [
 
-  });
+"home",
+"modePage",
+"manualPage",
+"cameraPage",
+"palletPage",
+"locationPage",
+"transferPage",
+"outwardPage",
+"newPalletPage",
+"qrPage"
+
+];
+
+
+function hideAll() {
+
+screenIds.forEach(
+function(id) {
+
+document
+.getElementById(id)
+.classList.add("hidden");
+
+});
 
 }
 
 
-/*******************************************************
- * PALLET CAMERA
- *******************************************************/
+/************************************************
+ * HOME
+ ************************************************/
 
-function startPalletScanner() {
+function home() {
 
-  stopScanner();
+stopCamera();
 
-  hideAllScreens();
+hideAll();
 
+document
+.getElementById("home")
+.classList.remove("hidden");
 
-  document
-    .getElementById("palletScannerScreen")
-    .classList.remove("hidden");
+currentPallet = null;
 
+selectedLocation = "";
 
-  setMessage(
-    "📷 Scan Pallet QR..."
-  );
-
-
-  scanner =
-    new Html5Qrcode("reader");
-
-
-  scanner.start(
-
-    {
-      facingMode: "environment"
-    },
-
-    {
-      fps: 10,
-
-      qrbox: {
-        width: 250,
-        height: 250
-      }
-
-    },
-
-    function(decodedText) {
-
-      const palletId =
-        String(decodedText)
-          .trim()
-          .toUpperCase();
-
-
-      stopScanner();
-
-      loadPallet(
-        palletId
-      );
-
-    },
-
-    function(errorMessage) {
-
-      // Ignore normal scanner messages
-
-    }
-
-  )
-
-  .catch(function(error) {
-
-    showError(
-      "Camera error: " +
-      error
-    );
-
-  });
+selectedNewLocation = "";
 
 }
 
 
-/*******************************************************
- * LOCATION CAMERA
- *******************************************************/
+/************************************************
+ * MODE
+ ************************************************/
 
-function startLocationScanner() {
+function modePage(mode) {
 
-  stopScanner();
+currentMode = mode;
 
-  hideAllScreens();
+hideAll();
 
+document
+.getElementById("modePage")
+.classList.remove("hidden");
 
-  document
-    .getElementById("locationScannerScreen")
-    .classList.remove("hidden");
-
-
-  setMessage(
-    "📷 Scan Location QR..."
-  );
-
-
-  scanner =
-    new Html5Qrcode(
-      "locationReader"
-    );
+document
+.getElementById("modeTitle")
+.innerText =
+mode;
 
 
-  scanner.start(
-
-    {
-      facingMode: "environment"
-    },
-
-    {
-      fps: 10,
-
-      qrbox: {
-        width: 250,
-        height: 250
-      }
-
-    },
-
-    function(decodedText) {
-
-      const location =
-        String(decodedText)
-          .trim()
-          .toUpperCase();
-
-
-      stopScanner();
-
-      confirmLocation(
-        location
-      );
-
-    },
-
-    function(errorMessage) {
-
-      // Ignore normal scanner messages
-
-    }
-
-  )
-
-  .catch(function(error) {
-
-    showError(
-      "Location camera error: " +
-      error
-    );
-
-  });
+document
+.getElementById("palletAction")
+.innerText =
+mode === "INWARD"
+? "📍 ASSIGN LOCATION"
+: mode === "TRANSFER"
+? "🔵 TRANSFER"
+: "🔴 OUTWARD";
 
 }
 
 
-/*******************************************************
+/************************************************
+ * MANUAL PALLET
+ ************************************************/
+
+function manualPallet() {
+
+hideAll();
+
+document
+.getElementById("manualPage")
+.classList.remove("hidden");
+
+document
+.getElementById("manualPalletId")
+.value = "";
+
+document
+.getElementById("manualPalletId")
+.focus();
+
+}
+
+
+/************************************************
+ * MANUAL PALLET SUBMIT
+ ************************************************/
+
+function manualPalletSubmit() {
+
+const id =
+document
+.getElementById(
+"manualPalletId"
+)
+.value
+.trim()
+.toUpperCase();
+
+
+if (!id) {
+
+alert(
+"Enter Pallet ID."
+);
+
+return;
+
+}
+
+
+loadPallet(id);
+
+}
+
+
+/************************************************
+ * SCAN PALLET
+ ************************************************/
+
+function scanPallet() {
+
+startScanner(
+"Scan Pallet QR",
+function(text) {
+
+loadPallet(
+String(text)
+.trim()
+.toUpperCase()
+);
+
+});
+
+}
+
+
+/************************************************
+ * START SCANNER
+ ************************************************/
+
+function startScanner(
+title,
+callback
+) {
+
+stopCamera();
+
+hideAll();
+
+document
+.getElementById(
+"cameraPage"
+)
+.classList.remove("hidden");
+
+document
+.getElementById(
+"cameraTitle"
+)
+.innerText =
+title;
+
+
+scanner =
+new Html5Qrcode(
+"reader"
+);
+
+
+scanner.start(
+
+{
+facingMode:
+"environment"
+},
+
+{
+fps: 10,
+qrbox: {
+width: 250,
+height: 250
+}
+},
+
+function(text) {
+
+stopCamera();
+
+callback(text);
+
+},
+
+function(error) {}
+
+)
+
+.catch(
+function(error) {
+
+alert(
+"Camera error: " +
+error
+);
+
+});
+
+}
+
+
+/************************************************
  * STOP CAMERA
- *******************************************************/
+ ************************************************/
 
-function stopScanner() {
+function stopCamera() {
 
-  if (!scanner) {
-    return;
-  }
+if (!scanner) {
 
-
-  scanner
-    .stop()
-
-    .then(function() {
-
-      scanner.clear();
-
-      scanner = null;
-
-    })
-
-    .catch(function() {
-
-      scanner = null;
-
-    });
+return;
 
 }
 
 
-/*******************************************************
- * PALLET MANUAL SCREEN
- *******************************************************/
+scanner
+.stop()
+.then(
+function() {
 
-function showPalletTypeScreen() {
+scanner.clear();
 
-  stopScanner();
+scanner = null;
 
-  hideAllScreens();
+})
+.catch(
+function() {
 
+scanner = null;
 
-  document
-    .getElementById("palletTypeScreen")
-    .classList.remove("hidden");
-
-
-  const input =
-    document.getElementById(
-      "palletInput"
-    );
-
-
-  input.value = "";
-
-  input.focus();
-
-
-  setMessage(
-    "Enter Pallet ID."
-  );
+});
 
 }
 
 
-/*******************************************************
- * SUBMIT PALLET
- *******************************************************/
-
-function submitPallet() {
-
-  const palletId =
-    document
-      .getElementById(
-        "palletInput"
-      )
-      .value
-      .trim()
-      .toUpperCase();
-
-
-  if (!palletId) {
-
-    showError(
-      "Please enter Pallet ID."
-    );
-
-    return;
-
-  }
-
-
-  loadPallet(
-    palletId
-  );
-
-}
-
-
-/*******************************************************
- * GET PALLET FROM GOOGLE SHEET
- *******************************************************/
+/************************************************
+ * LOAD PALLET
+ ************************************************/
 
 function loadPallet(
-  palletId
+id
 ) {
 
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "palletResultScreen"
-    )
-    .classList.remove("hidden");
-
-
-  document
-    .getElementById(
-      "palletResult"
-    )
-    .innerHTML =
-
-      '<span class="info">' +
-
-      '🔍 Checking pallet ' +
-
-      '<b>' +
-
-      escapeHtml(
-        palletId
-      ) +
-
-      '</b>...' +
-
-      '</span>';
-
-
-  setMessage(
-    "Connecting to Google Sheet..."
-  );
-
-
-  const callbackName =
-    "abcPallet_" +
-    Date.now();
-
-
-  window[callbackName] =
-    function(data) {
-
-      clearTimeout(
-        requestTimer
-      );
-
-
-      if (
-        data &&
-        data.ok === true
-      ) {
-
-        currentPallet =
-          data;
-
-
-        showPallet(
-          data
-        );
-
-      }
-
-      else {
-
-        showError(
-
-          data &&
-          data.message
-
-            ? data.message
-
-            : "Pallet not found."
-
-        );
-
-      }
-
-
-      cleanup(
-        callbackName
-      );
-
-    };
-
-
-  const url =
-
-    API_URL +
-
-    "?action=getPallet" +
-
-    "&palletId=" +
-
-    encodeURIComponent(
-      palletId
-    ) +
-
-    "&prefix=" +
-
-    encodeURIComponent(
-      callbackName
-    ) +
-
-    "&t=" +
-
-    Date.now();
-
-
-  const script =
-    document.createElement(
-      "script"
-    );
-
-
-  script.id =
-    callbackName;
-
-
-  script.type =
-    "text/javascript";
-
-
-  script.async =
-    true;
-
-
-  script.src =
-    url;
-
-
-  script.onerror =
-    function() {
-
-      clearTimeout(
-        requestTimer
-      );
-
-
-      showError(
-        "Could not connect to ABC Fruits server."
-      );
-
-
-      cleanup(
-        callbackName
-      );
-
-    };
-
-
-  document
-    .head
-    .appendChild(
-      script
-    );
-
-
-  requestTimer =
-    setTimeout(function() {
-
-      showError(
-        "Google Apps Script response timeout."
-      );
-
-
-      cleanup(
-        callbackName
-      );
-
-    }, 15000);
+hideAll();
+
+document
+.getElementById(
+"palletPage"
+)
+.classList.remove("hidden");
+
+
+document
+.getElementById(
+"palletData"
+)
+.innerHTML =
+"🔍 Checking pallet...";
+
+
+api(
+"getPallet",
+{
+palletId: id
+},
+function(data) {
+
+if (!data.ok) {
+
+document
+.getElementById(
+"palletData"
+)
+.innerHTML =
+"<span class='error'>" +
+escapeHtml(
+data.message
+) +
+"</span>";
+
+return;
 
 }
 
 
-/*******************************************************
+currentPallet =
+data;
+
+
+showPallet();
+
+});
+
+}
+
+
+/************************************************
  * SHOW PALLET
- *******************************************************/
+ ************************************************/
 
-function showPallet(
-  data
+function showPallet() {
+
+hideAll();
+
+document
+.getElementById(
+"palletPage"
+)
+.classList.remove("hidden");
+
+
+const p =
+currentPallet;
+
+
+document
+.getElementById(
+"palletData"
+)
+.innerHTML =
+
+"<b>Pallet:</b> " +
+safe(p.palletId) +
+
+"<br><b>Batch:</b> " +
+safe(p.batchId) +
+
+"<br><b>Product:</b> " +
+safe(p.product) +
+
+"<br><b>Production:</b> " +
+safe(p.productionDate) +
+
+"<br><b>Expiry:</b> " +
+safe(p.expiryDate) +
+
+"<br><b>Box Weight:</b> " +
+safe(p.boxWeight) +
+" KG" +
+
+"<br><b>Original:</b> " +
+safe(p.originalBoxes) +
+
+"<br><b>Current:</b> " +
+safe(p.currentBoxes) +
+
+"<br><b>Current KG:</b> " +
+safe(p.currentKG) +
+
+"<br><b>Room:</b> " +
+safe(p.currentRoom) +
+
+"<br><b>Location:</b> " +
+safe(p.currentLocation) +
+
+"<br><b>Status:</b> " +
+safe(p.status);
+
+
+const btn =
+document
+.getElementById(
+"palletAction"
+);
+
+
+btn.innerText =
+currentMode === "INWARD"
+? "📍 ASSIGN LOCATION"
+: currentMode === "TRANSFER"
+? "🔵 TRANSFER"
+: "🔴 OUTWARD";
+
+}
+
+
+/************************************************
+ * PALLET ACTION
+ ************************************************/
+
+function palletAction() {
+
+if (
+currentMode ===
+"INWARD"
 ) {
 
-  document
-    .getElementById(
-      "palletResult"
-    )
-    .innerHTML =
-
-      '<div class="success">' +
-
-      '✅ PALLET FOUND' +
-
-      '</div>' +
-
-      '<br>' +
-
-      '<b>Pallet ID:</b> ' +
-
-      safe(
-        data.palletId
-      ) +
-
-      '<br>' +
-
-      '<b>Batch ID:</b> ' +
-
-      safe(
-        data.batchId
-      ) +
-
-      '<br>' +
-
-      '<b>Product:</b> ' +
-
-      safe(
-        data.product
-      ) +
-
-      '<br>' +
-
-      '<b>Production Date:</b> ' +
-
-      safe(
-        data.productionDate
-      ) +
-
-      '<br>' +
-
-      '<b>Box Weight:</b> ' +
-
-      safe(
-        data.boxWeight
-      ) +
-
-      ' KG' +
-
-      '<br>' +
-
-      '<b>Original Boxes:</b> ' +
-
-      safe(
-        data.originalBoxes
-      ) +
-
-      '<br>' +
-
-      '<b>Current Boxes:</b> ' +
-
-      safe(
-        data.currentBoxes
-      ) +
-
-      '<br>' +
-
-      '<b>Current KG:</b> ' +
-
-      safe(
-        data.currentKG
-      ) +
-
-      ' KG' +
-
-      '<br>' +
-
-      '<b>Current Room:</b> ' +
-
-      safe(
-        data.currentRoom
-      ) +
-
-      '<br>' +
-
-      '<b>Current Location:</b> ' +
-
-      safe(
-        data.currentLocation
-      ) +
-
-      '<br>' +
-
-      '<b>Status:</b> ' +
-
-      safe(
-        data.status
-      );
-
-
-  setMessage(
-    "✅ Pallet data loaded."
-  );
+openLocation();
 
 }
 
-
-/*******************************************************
- * LOCATION MENU
- *******************************************************/
-
-function showLocationScreen() {
-
-  stopScanner();
-
-  hideAllScreens();
-
-
-  if (
-    !currentPallet
-  ) {
-
-    showError(
-      "Pallet information is missing."
-    );
-
-    return;
-
-  }
-
-
-  document
-    .getElementById(
-      "locationScreen"
-    )
-    .classList.remove("hidden");
-
-
-  document
-    .getElementById(
-      "selectedPallet"
-    )
-    .innerHTML =
-
-      '<b>Pallet:</b> ' +
-
-      safe(
-        currentPallet.palletId
-      ) +
-
-      '<br>' +
-
-      '<b>Product:</b> ' +
-
-      safe(
-        currentPallet.product
-      ) +
-
-      '<br>' +
-
-      '<b>Current Location:</b> ' +
-
-      safe(
-        currentPallet.currentLocation
-      );
-
-
-  setMessage(
-    "Select Location QR or type location."
-  );
-
-}
-
-
-/*******************************************************
- * LOCATION MANUAL ENTRY
- *******************************************************/
-
-function showLocationTypeScreen() {
-
-  stopScanner();
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "locationTypeScreen"
-    )
-    .classList.remove("hidden");
-
-
-  const input =
-    document.getElementById(
-      "locationInput"
-    );
-
-
-  input.value = "";
-
-  input.focus();
-
-
-  setMessage(
-    "Enter Location."
-  );
-
-}
-
-
-/*******************************************************
- * SUBMIT LOCATION
- *******************************************************/
-
-function submitLocation() {
-
-  const location =
-    document
-      .getElementById(
-        "locationInput"
-      )
-      .value
-      .trim()
-      .toUpperCase();
-
-
-  if (!location) {
-
-    showError(
-      "Please enter Location."
-    );
-
-    return;
-
-  }
-
-
-  confirmLocation(
-    location
-  );
-
-}
-
-
-/*******************************************************
- * CONFIRM LOCATION
- *******************************************************/
-
-function confirmLocation(
-  location
+else if (
+currentMode ===
+"TRANSFER"
 ) {
 
-  currentLocation =
-    location;
+openTransfer();
 
+}
 
-  hideAllScreens();
+else {
 
+openOutward();
 
-  document
-    .getElementById(
-      "locationConfirmScreen"
-    )
-    .classList.remove("hidden");
-
-
-  document
-    .getElementById(
-      "locationResult"
-    )
-    .innerHTML =
-
-      '<div class="success">' +
-
-      '📍 LOCATION CAPTURED' +
-
-      '</div>' +
-
-      '<br>' +
-
-      '<b>Pallet:</b> ' +
-
-      safe(
-        currentPallet.palletId
-      ) +
-
-      '<br>' +
-
-      '<b>Product:</b> ' +
-
-      safe(
-        currentPallet.product
-      ) +
-
-      '<br>' +
-
-      '<b>Location:</b> ' +
-
-      '<b>' +
-
-      safe(
-        currentLocation
-      ) +
-
-      '</b>';
-
-
-  setMessage(
-    "Check location before saving."
-  );
+}
 
 }
 
 
-/*******************************************************
- * SAVE LOCATION
- *******************************************************/
+/************************************************
+ * INWARD LOCATION
+ ************************************************/
 
-function saveLocation() {
+function openLocation() {
 
-  if (
-    !currentPallet ||
-    !currentPallet.palletId
-  ) {
+hideAll();
 
-    showError(
-      "Pallet information missing."
-    );
+document
+.getElementById(
+"locationPage"
+)
+.classList.remove("hidden");
 
-    return;
 
-  }
+document
+.getElementById(
+"locationInfo"
+)
+.innerHTML =
 
+"<b>Pallet:</b> " +
+safe(currentPallet.palletId) +
 
-  if (!currentLocation) {
+"<br><b>Product:</b> " +
+safe(currentPallet.product) +
 
-    showError(
-      "Location is missing."
-    );
+"<br><b>Current Location:</b> " +
+safe(currentPallet.currentLocation);
 
-    return;
 
-  }
-
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "finalScreen"
-    )
-    .classList.remove("hidden");
-
-
-  document
-    .getElementById(
-      "finalResult"
-    )
-    .innerHTML =
-
-      '<span class="info">' +
-
-      '💾 Saving location...' +
-
-      '</span>';
-
-
-  setMessage(
-    "Updating Google Sheet..."
-  );
-
-
-  const callbackName =
-    "abcLocation_" +
-    Date.now();
-
-
-  window[callbackName] =
-    function(data) {
-
-      clearTimeout(
-        requestTimer
-      );
-
-
-      console.log(
-        "LOCATION RESPONSE:",
-        data
-      );
-
-
-      if (
-        data &&
-        data.ok === true
-      ) {
-
-        /*
-         * Update local pallet data
-         */
-
-        currentPallet.currentLocation =
-          data.location;
-
-
-        document
-          .getElementById(
-            "finalResult"
-          )
-          .innerHTML =
-
-            '<div class="success">' +
-
-            '✅ LOCATION SAVED' +
-
-            '</div>' +
-
-            '<br>' +
-
-            '<b>Pallet:</b> ' +
-
-            safe(
-              data.palletId
-            ) +
-
-            '<br>' +
-
-            '<b>Location:</b> ' +
-
-            safe(
-              data.location
-            ) +
-
-            '<br>' +
-
-            '<b>Action:</b> ' +
-
-            safe(
-              data.action
-            ) +
-
-            '<br>' +
-
-            '<b>Boxes:</b> ' +
-
-            safe(
-              data.boxes
-            ) +
-
-            '<br>' +
-
-            '<b>KG:</b> ' +
-
-            safe(
-              data.kg
-            ) +
-
-            '<br><br>' +
-
-            '✅ PALLET_MASTER updated' +
-
-            '<br>' +
-
-            '✅ TRANSACTION recorded';
-
-
-        setMessage(
-          "✅ Google Sheet updated successfully."
-        );
-
-      }
-
-      else {
-
-        showError(
-
-          data &&
-          data.message
-
-            ? data.message
-
-            : "Location update failed."
-
-        );
-
-      }
-
-
-      cleanup(
-        callbackName
-      );
-
-    };
-
-
-  /*
-   * IMPORTANT:
-   *
-   * Empty operator and dispatch number
-   * are sent for now.
-   */
-
-  const url =
-
-    API_URL +
-
-    "?action=updateLocation" +
-
-    "&palletId=" +
-
-    encodeURIComponent(
-      currentPallet.palletId
-    ) +
-
-    "&location=" +
-
-    encodeURIComponent(
-      currentLocation
-    ) +
-
-    "&operator=" +
-
-    encodeURIComponent(
-      ""
-    ) +
-
-    "&dispatchNo=" +
-
-    encodeURIComponent(
-      ""
-    ) +
-
-    "&prefix=" +
-
-    encodeURIComponent(
-      callbackName
-    ) +
-
-    "&t=" +
-
-    Date.now();
-
-
-  console.log(
-    "LOCATION SAVE URL:",
-    url
-  );
-
-
-  const script =
-    document.createElement(
-      "script"
-    );
-
-
-  script.id =
-    callbackName;
-
-
-  script.type =
-    "text/javascript";
-
-
-  script.async =
-    true;
-
-
-  script.src =
-    url;
-
-
-  script.onerror =
-    function() {
-
-      clearTimeout(
-        requestTimer
-      );
-
-
-      showError(
-        "Could not connect to ABC Fruits server while saving location."
-      );
-
-
-      cleanup(
-        callbackName
-      );
-
-    };
-
-
-  document
-    .head
-    .appendChild(
-      script
-    );
-
-
-  requestTimer =
-    setTimeout(function() {
-
-      showError(
-        "Location save response timeout."
-      );
-
-
-      cleanup(
-        callbackName
-      );
-
-    }, 15000);
+loadFreeLocations(
+"freeLocations"
+);
 
 }
 
 
-/*******************************************************
- * BACK TO PALLET RESULT
- *******************************************************/
+/************************************************
+ * LOAD FREE LOCATIONS
+ ************************************************/
 
-function showPalletResult() {
-
-  stopScanner();
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "palletResultScreen"
-    )
-    .classList.remove("hidden");
-
-}
-
-
-/*******************************************************
- * BACK HOME
- *******************************************************/
-
-function backHome() {
-
-  stopScanner();
-
-
-  currentPallet =
-    null;
-
-
-  currentLocation =
-    "";
-
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "mainScreen"
-    )
-    .classList.remove("hidden");
-
-
-  setMessage(
-    "Ready."
-  );
-
-}
-
-
-/*******************************************************
- * GENERIC ERROR
- *******************************************************/
-
-function showError(
-  message
+function loadFreeLocations(
+elementId
 ) {
 
-  stopScanner();
-
-  hideAllScreens();
-
-
-  document
-    .getElementById(
-      "finalScreen"
-    )
-    .classList.remove("hidden");
+document
+.getElementById(
+elementId
+)
+.innerHTML =
+"Loading free locations...";
 
 
-  document
-    .getElementById(
-      "finalResult"
-    )
-    .innerHTML =
+api(
+"getFreeLocations",
+{},
+function(data) {
 
-      '<span class="error">' +
+if (!data.ok) {
 
-      '❌ ' +
+document
+.getElementById(
+elementId
+)
+.innerHTML =
+"<span class='error'>" +
+safe(data.message) +
+"</span>";
 
-      escapeHtml(
-        message
-      ) +
-
-      '</span>';
-
-
-  setMessage(
-    "Operation failed."
-  );
+return;
 
 }
 
 
-/*******************************************************
- * CLEANUP JSONP
- *******************************************************/
+if (
+!data.locations ||
+data.locations.length === 0
+) {
+
+document
+.getElementById(
+elementId
+)
+.innerHTML =
+"No free locations.";
+
+return;
+
+}
+
+
+let html =
+"<b>FREE LOCATIONS: " +
+data.free +
+"</b><br><br>";
+
+
+data.locations.forEach(
+function(location) {
+
+html +=
+
+"<div class='free' " +
+"onclick=\"selectLocation('" +
+escapeAttribute(location) +
+"','" +
+elementId +
+"')\">" +
+
+"🟢 " +
+escapeHtml(location) +
+
+"</div>";
+
+});
+
+
+document
+.getElementById(
+elementId
+)
+.innerHTML =
+html;
+
+});
+
+}
+
+
+/************************************************
+ * SELECT LOCATION
+ ************************************************/
+
+function selectLocation(
+location,
+elementId
+) {
+
+if (
+elementId ===
+"newLocations"
+) {
+
+selectedNewLocation =
+location;
+
+
+document
+.getElementById(
+"selectedNewLocation"
+)
+.innerHTML =
+
+"Selected: <b>" +
+safe(location) +
+"</b>";
+
+}
+
+else {
+
+selectedLocation =
+location;
+
+
+document
+.getElementById(
+elementId
+)
+.innerHTML =
+
+"<b>Selected:</b> " +
+safe(location);
+
+}
+
+}
+
+
+/************************************************
+ * SCAN LOCATION
+ ************************************************/
+
+function scanLocation() {
+
+startScanner(
+"Scan Location QR",
+function(text) {
+
+selectedLocation =
+String(text)
+.trim()
+.toUpperCase();
+
+
+confirmInwardLocation();
+
+});
+
+}
+
+
+/************************************************
+ * MANUAL LOCATION
+ ************************************************/
+
+function manualLocation() {
+
+const location =
+prompt(
+"Enter Location"
+);
+
+
+if (!location) {
+return;
+}
+
+
+selectedLocation =
+location
+.trim()
+.toUpperCase();
+
+
+confirmInwardLocation();
+
+}
+
+
+/************************************************
+ * CONFIRM INWARD LOCATION
+ ************************************************/
+
+function confirmInwardLocation() {
+
+if (!selectedLocation) {
+
+alert(
+"Select location."
+);
+
+return;
+
+}
+
+
+if (
+String(
+currentPallet.currentLocation || ""
+)
+.toUpperCase() ===
+selectedLocation
+) {
+
+alert(
+"Pallet is already in this location."
+);
+
+return;
+
+}
+
+
+api(
+"getFreeLocations",
+{},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+data.message
+);
+
+return;
+
+}
+
+
+if (
+data.locations.indexOf(
+selectedLocation
+) === -1
+) {
+
+alert(
+"❌ Location is occupied or invalid."
+);
+
+return;
+
+}
+
+
+api(
+"transfer",
+{
+palletId:
+currentPallet.palletId,
+
+location:
+selectedLocation
+},
+function(result) {
+
+if (!result.ok) {
+
+alert(
+"❌ " +
+result.message
+);
+
+return;
+
+}
+
+
+alert(
+"✅ INWARD COMPLETED\n\n" +
+"Location: " +
+selectedLocation
+);
+
+
+loadPallet(
+currentPallet.palletId
+);
+
+});
+
+});
+
+}
+
+
+/************************************************
+ * TRANSFER
+ ************************************************/
+
+function openTransfer() {
+
+hideAll();
+
+document
+.getElementById(
+"transferPage"
+)
+.classList.remove("hidden");
+
+
+document
+.getElementById(
+"transferInfo"
+)
+.innerHTML =
+
+"<b>Pallet:</b> " +
+safe(currentPallet.palletId) +
+
+"<br><b>Current:</b> " +
+safe(currentPallet.currentLocation);
+
+
+selectedLocation = "";
+
+}
+
+
+/************************************************
+ * TRANSFER SCAN
+ ************************************************/
+
+function scanTransferLocation() {
+
+startScanner(
+"Scan Destination QR",
+function(text) {
+
+selectedLocation =
+String(text)
+.trim()
+.toUpperCase();
+
+
+document
+.getElementById(
+"transferLocation"
+)
+.innerHTML =
+
+"Destination: <b>" +
+safe(selectedLocation) +
+"</b>";
+
+});
+
+}
+
+
+/************************************************
+ * TRANSFER MANUAL
+ ************************************************/
+
+function manualTransferLocation() {
+
+const location =
+prompt(
+"Enter Destination Location"
+);
+
+
+if (!location) {
+return;
+}
+
+
+selectedLocation =
+location
+.trim()
+.toUpperCase();
+
+
+document
+.getElementById(
+"transferLocation"
+)
+.innerHTML =
+
+"Destination: <b>" +
+safe(selectedLocation) +
+"</b>";
+
+}
+
+
+/************************************************
+ * SAVE TRANSFER
+ ************************************************/
+
+function saveTransfer() {
+
+if (!selectedLocation) {
+
+alert(
+"Select destination."
+);
+
+return;
+
+}
+
+
+api(
+"transfer",
+{
+palletId:
+currentPallet.palletId,
+
+location:
+selectedLocation
+},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+"❌ " +
+data.message
+);
+
+return;
+
+}
+
+
+alert(
+"✅ TRANSFER COMPLETED\n\n" +
+data.fromLocation +
+" → " +
+data.toLocation
+);
+
+
+loadPallet(
+currentPallet.palletId
+);
+
+});
+
+}
+
+
+/************************************************
+ * OUTWARD
+ ************************************************/
+
+function openOutward() {
+
+hideAll();
+
+document
+.getElementById(
+"outwardPage"
+)
+.classList.remove("hidden");
+
+
+let available =
+Number(
+currentPallet.currentBoxes
+) || 0;
+
+
+if (
+available === 0 &&
+String(
+currentPallet.status
+)
+.toUpperCase() ===
+"READY"
+) {
+
+available =
+Number(
+currentPallet.originalBoxes
+) || 0;
+
+}
+
+
+document
+.getElementById(
+"outwardInfo"
+)
+.innerHTML =
+
+"<b>Pallet:</b> " +
+safe(currentPallet.palletId) +
+
+"<br><b>Product:</b> " +
+safe(currentPallet.product) +
+
+"<br><b>Available:</b> " +
+available +
+" boxes" +
+
+"<br><b>Location:</b> " +
+safe(currentPallet.currentLocation);
+
+}
+
+
+/************************************************
+ * SAVE OUTWARD
+ ************************************************/
+
+function saveOutward() {
+
+const boxes =
+Number(
+document
+.getElementById(
+"outwardBoxes"
+)
+.value
+);
+
+
+const dispatchNo =
+document
+.getElementById(
+"dispatchNo"
+)
+.value
+.trim();
+
+
+if (
+!boxes ||
+boxes <= 0
+) {
+
+alert(
+"Enter outward boxes."
+);
+
+return;
+
+}
+
+
+if (!dispatchNo) {
+
+alert(
+"Enter Dispatch No."
+);
+
+return;
+
+}
+
+
+api(
+"outward",
+{
+palletId:
+currentPallet.palletId,
+
+boxes:
+boxes,
+
+dispatchNo:
+dispatchNo
+},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+"❌ " +
+data.message
+);
+
+return;
+
+}
+
+
+alert(
+
+"✅ OUTWARD COMPLETED\n\n" +
+
+"Boxes: " +
+data.boxes +
+
+"\nKG: " +
+data.kg +
+
+"\nRemaining: " +
+data.remainingBoxes
+
+);
+
+
+loadPallet(
+currentPallet.palletId
+);
+
+});
+
+}
+
+
+/************************************************
+ * NEW PALLET PAGE
+ ************************************************/
+
+function newPalletPage() {
+
+hideAll();
+
+document
+.getElementById(
+"newPalletPage"
+)
+.classList.remove("hidden");
+
+
+selectedNewLocation = "";
+
+
+loadPalletNumbers();
+
+loadFreeLocations(
+"newLocations"
+);
+
+}
+
+
+/************************************************
+ * PALLET NUMBERS
+ ************************************************/
+
+function loadPalletNumbers() {
+
+api(
+"getPalletNumbers",
+{},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+data.message
+);
+
+return;
+
+}
+
+
+document
+.getElementById(
+"nextNumber"
+)
+.innerHTML =
+
+"<b>NEXT PALLET NUMBER</b><br>" +
+
+"<span style='font-size:26px'>" +
+
+safe(
+data.nextPallet
+) +
+
+"</span>";
+
+
+const select =
+document
+.getElementById(
+"oldPallet"
+);
+
+
+select.innerHTML =
+
+"<option value=''>" +
+"Use next pallet number" +
+"</option>";
+
+
+(data.previous || [])
+.forEach(
+function(id) {
+
+const option =
+document.createElement(
+"option"
+);
+
+option.value =
+id;
+
+option.textContent =
+id;
+
+select.appendChild(
+option
+);
+
+});
+
+});
+
+}
+
+
+/************************************************
+ * SCAN NEW LOCATION
+ ************************************************/
+
+function scanNewLocation() {
+
+startScanner(
+"Scan Free Location QR",
+function(text) {
+
+const location =
+String(text)
+.trim()
+.toUpperCase();
+
+
+api(
+"getFreeLocations",
+{},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+data.message
+);
+
+return;
+
+}
+
+
+if (
+data.locations.indexOf(
+location
+) === -1
+) {
+
+alert(
+"❌ This location is occupied or invalid."
+);
+
+return;
+
+}
+
+
+selectedNewLocation =
+location;
+
+
+document
+.getElementById(
+"selectedNewLocation"
+)
+.innerHTML =
+
+"Selected: <b>" +
+safe(location) +
+"</b>";
+
+});
+
+});
+
+}
+
+
+/************************************************
+ * CREATE PALLET
+ ************************************************/
+
+function createPallet() {
+
+const oldPallet =
+document
+.getElementById(
+"oldPallet"
+)
+.value;
+
+
+const nextText =
+document
+.getElementById(
+"nextNumber"
+)
+.innerText;
+
+
+let palletId =
+nextText
+.trim()
+.split("\n")
+.pop()
+.trim();
+
+
+if (oldPallet) {
+
+palletId =
+oldPallet;
+
+}
+
+
+const batchId =
+document
+.getElementById(
+"newBatch"
+)
+.value
+.trim();
+
+
+const product =
+document
+.getElementById(
+"newProduct"
+)
+.value
+.trim();
+
+
+const productionDate =
+document
+.getElementById(
+"newProductionDate"
+)
+.value;
+
+
+const expiryDate =
+document
+.getElementById(
+"newExpiryDate"
+)
+.value;
+
+
+const weight =
+Number(
+document
+.getElementById(
+"newWeight"
+)
+.value
+);
+
+
+const boxes =
+Number(
+document
+.getElementById(
+"newBoxes"
+)
+.value
+);
+
+
+if (!batchId) {
+
+alert(
+"Enter Batch ID."
+);
+
+return;
+
+}
+
+
+if (!product) {
+
+alert(
+"Enter Product."
+);
+
+return;
+
+}
+
+
+if (!weight) {
+
+alert(
+"Enter Box Weight."
+);
+
+return;
+
+}
+
+
+if (!boxes) {
+
+alert(
+"Enter Number of Boxes."
+);
+
+return;
+
+}
+
+
+if (!selectedNewLocation) {
+
+alert(
+"Select or scan a FREE location."
+);
+
+return;
+
+}
+
+
+api(
+"createPallet",
+{
+palletId:
+palletId,
+
+batchId:
+batchId,
+
+product:
+product,
+
+productionDate:
+productionDate,
+
+expiryDate:
+expiryDate,
+
+boxWeight:
+weight,
+
+boxes:
+boxes,
+
+location:
+selectedNewLocation
+},
+function(data) {
+
+if (!data.ok) {
+
+alert(
+"❌ " +
+data.message
+);
+
+return;
+
+}
+
+
+showQR(
+data
+);
+
+});
+
+}
+
+
+/************************************************
+ * SHOW QR
+ ************************************************/
+
+function showQR(
+data
+) {
+
+hideAll();
+
+document
+.getElementById(
+"qrPage"
+)
+.classList.remove("hidden");
+
+
+document
+.getElementById(
+"qrcode"
+)
+innerHTML = "";
+
+
+new QRCode(
+document.getElementById(
+"qrcode"
+),
+{
+text:
+data.palletId,
+
+width: 220,
+
+height: 220,
+
+correctLevel:
+QRCode.CorrectLevel.H
+}
+);
+
+
+document
+.getElementById(
+"qrPalletId"
+)
+.innerText =
+data.palletId;
+
+
+document
+.getElementById(
+"qrDetails"
+)
+.innerHTML =
+
+"<b>Product:</b> " +
+safe(
+document
+.getElementById(
+"newProduct"
+)
+.value
+) +
+
+"<br><b>Batch:</b> " +
+safe(
+document
+.getElementById(
+"newBatch"
+)
+.value
+) +
+
+"<br><b>Boxes:</b> " +
+data.boxes +
+
+"<br><b>Location:</b> " +
+safe(data.location);
+
+}
+
+
+/************************************************
+ * GENERIC JSONP API
+ ************************************************/
+
+function api(
+action,
+params,
+callback
+) {
+
+const callbackName =
+"abc_" +
+Date.now() +
+"_" +
+Math.floor(
+Math.random() * 100000
+);
+
+
+let finished = false;
+
+
+window[callbackName] =
+function(data) {
+
+if (finished) {
+return;
+}
+
+finished = true;
+
+callback(data);
+
+cleanup(
+callbackName
+);
+
+};
+
+
+let url =
+API_URL +
+"?action=" +
+encodeURIComponent(
+action
+);
+
+
+Object.keys(params)
+.forEach(
+function(key) {
+
+url +=
+"&" +
+encodeURIComponent(key) +
+"=" +
+encodeURIComponent(
+params[key]
+);
+
+});
+
+
+url +=
+"&prefix=" +
+encodeURIComponent(
+callbackName
+) +
+"&t=" +
+Date.now();
+
+
+const script =
+document.createElement(
+"script"
+);
+
+
+script.id =
+callbackName;
+
+script.src =
+url;
+
+script.async =
+true;
+
+
+script.onerror =
+function() {
+
+if (finished) {
+return;
+}
+
+finished = true;
+
+cleanup(
+callbackName
+);
+
+alert(
+"❌ Could not connect to ABC Fruits server."
+);
+
+};
+
+
+document
+.head
+.appendChild(
+script
+);
+
+
+setTimeout(
+function() {
+
+if (!finished) {
+
+finished = true;
+
+cleanup(
+callbackName
+);
+
+alert(
+"❌ Server response timeout."
+);
+
+}
+
+},
+15000
+);
+
+}
+
+
+/************************************************
+ * CLEANUP
+ ************************************************/
 
 function cleanup(
-  callbackName
+callbackName
 ) {
 
-  try {
+try {
 
-    delete window[
-      callbackName
-    ];
+delete window[
+callbackName
+];
 
-  }
-
-  catch (error) {
-
-    console.log(
-      error
-    );
-
-  }
+}
+catch(e) {}
 
 
-  const script =
-    document.getElementById(
-      callbackName
-    );
+const script =
+document.getElementById(
+callbackName
+);
 
 
-  if (script) {
+if (script) {
 
-    script.remove();
+script.remove();
 
-  }
-
-
-  requestTimer =
-    null;
+}
 
 }
 
 
-/*******************************************************
- * STATUS MESSAGE
- *******************************************************/
-
-function setMessage(
-  message
-) {
-
-  document
-    .getElementById(
-      "message"
-    )
-    .innerHTML =
-      message;
-
-}
-
-
-/*******************************************************
- * SAFE VALUE
- *******************************************************/
+/************************************************
+ * SAFE HTML
+ ************************************************/
 
 function safe(
-  value
+value
 ) {
 
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+if (
+value === null ||
+value === undefined ||
+value === ""
+) {
 
-    return "-";
-
-  }
-
-
-  return escapeHtml(
-    String(value)
-  );
+return "-";
 
 }
 
 
-/*******************************************************
- * ESCAPE HTML
- *******************************************************/
+return escapeHtml(
+String(value)
+);
+
+}
+
 
 function escapeHtml(
-  value
+value
 ) {
 
-  return String(value)
+return String(value)
 
-    .replace(
-      /&/g,
-      "&amp;"
-    )
+.replace(
+/&/g,
+"&amp;"
+)
 
-    .replace(
-      /</g,
-      "&lt;"
-    )
+.replace(
+/</g,
+"&lt;"
+)
 
-    .replace(
-      />/g,
-      "&gt;"
-    )
+.replace(
+/>/g,
+"&gt;"
+)
 
-    .replace(
-      /"/g,
-      "&quot;"
-    )
+.replace(
+/"/g,
+"&quot;"
+)
 
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+.replace(
+/'/g,
+"&#039;"
+);
+
+}
+
+
+function escapeAttribute(
+value
+) {
+
+return String(value)
+.replace(
+/'/g,
+"\\'"
+);
 
 }
 
 </script>
 
 </body>
+
 </html>
