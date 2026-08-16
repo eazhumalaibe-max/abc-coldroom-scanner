@@ -1,28 +1,22 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
-<title>ABC Fruits Inventory</title>
+<title>ABC Fruits Inventory System</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 15px;
+  padding: 10px;
   background: #f3f4f6;
   font-family: Arial, sans-serif;
 }
@@ -31,22 +25,32 @@ body {
   max-width: 520px;
   margin: auto;
   background: white;
-  padding: 20px;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #0002;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
 }
 
-h1,
+h1 {
+  text-align: center;
+  margin: 5px 0 8px;
+  font-size: 30px;
+}
+
 h2 {
   text-align: center;
+  margin: 5px 0 20px;
+}
+
+h3 {
+  margin-top: 8px;
 }
 
 button {
   width: 100%;
-  padding: 15px;
-  margin-top: 10px;
-  border: 0;
+  border: none;
   border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
@@ -55,16 +59,11 @@ button {
 input,
 select {
   width: 100%;
-  padding: 14px;
-  margin-top: 8px;
-  border: 1px solid #ccc;
-  border-radius: 9px;
-  font-size: 16px;
-}
-
-.tile {
-  padding: 20px;
-  font-size: 18px;
+  padding: 12px;
+  margin: 5px 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
 }
 
 .green {
@@ -98,68 +97,83 @@ select {
 }
 
 .result {
-  margin-top: 15px;
-  padding: 15px;
   background: #f1f5f9;
   border-radius: 10px;
-  line-height: 1.8;
-}
-
-.success {
-  color: #047857;
-  font-weight: bold;
-}
-
-.error {
-  color: #b91c1c;
-  font-weight: bold;
+  padding: 13px;
+  margin-top: 10px;
+  line-height: 1.7;
 }
 
 .free {
-  padding: 11px;
-  margin: 6px 0;
-  border-radius: 8px;
   background: #ecfdf5;
-  color: #047857;
   border: 1px solid #a7f3d0;
+  color: #047857;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 7px;
   cursor: pointer;
 }
 
-.selected {
-  background: #dbeafe;
-  border: 2px solid #2563eb;
+.free:hover {
+  background: #d1fae5;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.success {
+  color: #059669;
+  font-weight: bold;
 }
 
 #reader {
-  margin-top: 15px;
-}
-
-.qrbox {
-  text-align: center;
-  padding: 15px;
-  background: white;
+  width: 100%;
   margin-top: 15px;
 }
 
 .label {
-  border: 2px solid #111;
-  padding: 15px;
-  margin-top: 10px;
-}
-
-.small {
   text-align: center;
-  color: #777;
-  font-size: 12px;
+  border: 2px solid #111827;
+  padding: 15px;
   margin-top: 15px;
 }
 
-</style>
+#qrcode {
+  display: flex;
+  justify-content: center;
+  margin: 10px;
+}
 
+.footer {
+  text-align: center;
+  color: #777;
+  font-size: 12px;
+  margin-top: 18px;
+}
+
+@media print {
+
+  body {
+    background: white;
+  }
+
+  .card {
+    box-shadow: none;
+  }
+
+  button,
+  .footer {
+    display: none !important;
+  }
+
+}
+</style>
 </head>
 
 <body>
@@ -167,486 +181,327 @@ select {
 <div class="card">
 
 <h1>🍎 ABC FRUITS</h1>
-
 <h2>Inventory System</h2>
 
 
-<!-- HOME -->
+<!-- ================= HOME ================= -->
 
 <div id="home">
 
-<button
-class="tile purple"
-onclick="newPalletPage()">
-
+<button class="purple" onclick="openPalletMaster()">
 🆕 PALLET MASTER / QR
-
 </button>
 
-<button
-class="tile green"
-onclick="modePage('INWARD')">
-
+<button class="green" onclick="openMode('INWARD')">
 🟢 INWARD
-
 </button>
 
-<button
-class="tile blue"
-onclick="modePage('TRANSFER')">
-
+<button class="blue" onclick="openMode('TRANSFER')">
 🔵 TRANSFER
-
 </button>
 
-<button
-class="tile red"
-onclick="modePage('OUTWARD')">
-
+<button class="red" onclick="openMode('OUTWARD')">
 🔴 OUTWARD
-
 </button>
+
+<div id="homeMessage" class="result">
+Ready.
+</div>
 
 </div>
 
 
-<!-- MODE PAGE -->
+<!-- ================= MODE ================= -->
 
-<div
-id="modePage"
-class="hidden">
+<div id="modePage" class="hidden">
 
 <h3 id="modeTitle"></h3>
 
-<button
-class="black"
-onclick="scanPallet()">
-
+<button class="black" onclick="scanPalletQR()">
 📷 SCAN PALLET QR
-
 </button>
 
-<button
-onclick="manualPallet()">
-
+<button onclick="typePalletID()">
 ⌨️ TYPE PALLET ID
-
 </button>
 
-<button
-class="gray"
-onclick="home()">
-
+<button class="gray" onclick="goHome()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- MANUAL PALLET -->
+<!-- ================= MANUAL PALLET ================= -->
 
-<div
-id="manualPage"
-class="hidden">
+<div id="manualPage" class="hidden">
 
-<h3>Enter Pallet ID</h3>
+<h3>ENTER PALLET ID</h3>
 
 <input
-id="manualPalletId"
-placeholder="PAL-000001">
+id="manualPallet"
+placeholder="PAL-000001"
+autocomplete="off">
 
-<button
-onclick="manualPalletSubmit()">
-
+<button class="black" onclick="submitManualPallet()">
 CHECK PALLET
-
 </button>
 
-<button
-class="gray"
-onclick="home()">
-
+<button class="gray" onclick="goHome()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- CAMERA -->
+<!-- ================= CAMERA ================= -->
 
-<div
-id="cameraPage"
-class="hidden">
+<div id="cameraPage" class="hidden">
 
-<h3 id="cameraTitle">
-Scan QR
-</h3>
+<h3 id="cameraTitle">SCAN QR</h3>
 
 <div id="reader"></div>
 
-<button
-class="gray"
-onclick="stopCamera();home()">
-
+<button class="gray" onclick="closeScanner()">
 CLOSE CAMERA
-
 </button>
 
 </div>
 
 
-<!-- PALLET -->
+<!-- ================= PALLET DETAILS ================= -->
 
-<div
-id="palletPage"
-class="hidden">
+<div id="palletPage" class="hidden">
 
-<h3>PALLET DETAILS</h3>
+<h3>📦 PALLET FOUND</h3>
 
-<div
-id="palletData"
-class="result">
+<div id="palletDetails" class="result">
+Loading...
 </div>
 
-<button
-id="palletAction"
-onclick="palletAction()">
-
+<button id="palletNextButton"
+class="green"
+onclick="palletNext()">
 NEXT
-
 </button>
 
-<button
-class="gray"
-onclick="home()">
-
-HOME
-
+<button class="gray" onclick="goHome()">
+← HOME
 </button>
 
 </div>
 
 
-<!-- LOCATION -->
+<!-- ================= INWARD LOCATION ================= -->
 
-<div
-id="locationPage"
-class="hidden">
+<div id="inwardLocationPage" class="hidden">
 
 <h3>📍 SELECT LOCATION</h3>
 
-<div
-id="locationInfo"
-class="result">
+<div id="inwardPalletInfo" class="result">
 </div>
 
-<button
-class="black"
-onclick="scanLocation()">
-
-📷 SCAN LOCATION QR
-
-</button>
-
-<button
-onclick="manualLocation()">
-
-⌨️ TYPE LOCATION
-
-</button>
-
-<div
-id="freeLocations"
-class="result">
-
+<div id="freeLocationList" class="result">
 Loading free locations...
-
 </div>
 
-<button
-class="gray"
-onclick="showPallet()">
+<button class="black" onclick="scanLocationQR('INWARD')">
+📷 SCAN LOCATION QR
+</button>
 
+<button onclick="typeLocation('INWARD')">
+⌨️ TYPE LOCATION
+</button>
+
+<div id="selectedInwardLocation" class="result">
+No location selected.
+</div>
+
+<button class="green" onclick="saveInward()">
+✅ CONFIRM & SAVE
+</button>
+
+<button class="gray" onclick="showPallet()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- TRANSFER -->
+<!-- ================= TRANSFER ================= -->
 
-<div
-id="transferPage"
-class="hidden">
+<div id="transferPage" class="hidden">
 
-<h3>🔵 TRANSFER</h3>
+<h3>🔵 TRANSFER PALLET</h3>
 
-<div
-id="transferInfo"
-class="result">
+<div id="transferInfo" class="result">
 </div>
 
-<button
-class="black"
-onclick="scanTransferLocation()">
+<div id="transferFreeLocations" class="result">
+Loading free locations...
+</div>
 
+<button class="black" onclick="scanLocationQR('TRANSFER')">
 📷 SCAN DESTINATION QR
-
 </button>
 
-<button
-onclick="manualTransferLocation()">
-
+<button onclick="typeLocation('TRANSFER')">
 ⌨️ TYPE DESTINATION
-
 </button>
 
-<div
-id="transferLocation"
-class="result">
-
+<div id="selectedTransferLocation" class="result">
 No destination selected.
-
 </div>
 
-<button
-class="green"
-onclick="saveTransfer()">
-
+<button class="green" onclick="saveTransfer()">
 ✅ CONFIRM TRANSFER
-
 </button>
 
-<button
-class="gray"
-onclick="showPallet()">
-
+<button class="gray" onclick="showPallet()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- OUTWARD -->
+<!-- ================= OUTWARD ================= -->
 
-<div
-id="outwardPage"
-class="hidden">
+<div id="outwardPage" class="hidden">
 
 <h3>🔴 OUTWARD</h3>
 
-<div
-id="outwardInfo"
-class="result">
+<div id="outwardInfo" class="result">
 </div>
 
 <input
 id="outwardBoxes"
 type="number"
+min="1"
 placeholder="Outward Boxes">
 
 <input
-id="dispatchNo"
+id="dispatchNumber"
 placeholder="Dispatch No">
 
-<button
-class="red"
-onclick="saveOutward()">
-
+<button class="red" onclick="saveOutward()">
 ✅ CONFIRM OUTWARD
-
 </button>
 
-<button
-class="gray"
-onclick="showPallet()">
-
+<button class="gray" onclick="showPallet()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- NEW PALLET -->
+<!-- ================= PALLET MASTER ================= -->
 
-<div
-id="newPalletPage"
-class="hidden">
+<div id="palletMasterPage" class="hidden">
 
 <h3>🆕 PALLET MASTER</h3>
 
-<div
-id="nextNumber"
-class="result">
-
+<div id="nextPalletBox" class="result">
 Loading...
-
 </div>
 
+<label>Previously Used Pallet</label>
 
-<h4>Previously Used Pallet</h4>
-
-<select
-id="oldPallet">
-
+<select id="previousPallet">
 <option value="">
 Select previous OUT pallet
 </option>
-
 </select>
 
-
 <input
-id="newBatch"
+id="batchID"
 placeholder="Batch ID">
 
-
 <input
-id="newProduct"
+id="product"
 placeholder="Product">
 
-
-<label>
-Production Date
-</label>
+<label>Production Date</label>
 
 <input
-id="newProductionDate"
+id="productionDate"
 type="date">
 
-
-<label>
-Expiry Date
-</label>
+<label>Expiry Date</label>
 
 <input
-id="newExpiryDate"
+id="expiryDate"
 type="date">
 
-
 <input
-id="newWeight"
+id="boxWeight"
 type="number"
+min="0"
+step="0.01"
 placeholder="Box Weight KG">
 
-
 <input
-id="newBoxes"
+id="numberOfBoxes"
 type="number"
+min="1"
 placeholder="Number of Boxes">
 
+<label>Free Location</label>
 
-<h4>Free Location</h4>
-
-<div
-id="newLocations"
-class="result">
-
-Loading...
-
+<div id="newPalletLocations" class="result">
+Loading free locations...
 </div>
 
-
-<button
-class="black"
-onclick="scanNewLocation()">
-
+<button class="black" onclick="scanLocationQR('NEWPALLET')">
 📷 SCAN LOCATION QR
-
 </button>
 
+<button onclick="typeLocation('NEWPALLET')">
+⌨️ TYPE LOCATION
+</button>
 
-<div
-id="selectedNewLocation"
-class="result">
-
+<div id="selectedNewLocation" class="result">
 No location selected.
-
 </div>
 
-
-<button
-class="green"
-onclick="createPallet()">
-
+<button class="green" onclick="createNewPallet()">
 💾 SAVE PALLET + GENERATE QR
-
 </button>
 
-
-<button
-class="gray"
-onclick="home()">
-
+<button class="gray" onclick="goHome()">
 ← BACK
-
 </button>
 
 </div>
 
 
-<!-- QR PRINT -->
+<!-- ================= QR PAGE ================= -->
 
-<div
-id="qrPage"
-class="hidden">
+<div id="qrPage" class="hidden">
 
-<h3>✅ PALLET CREATED</h3>
+<h3 class="success">✅ PALLET CREATED</h3>
 
-<div
-id="qrLabel"
-class="label">
+<div class="label">
 
-<div
-id="qrcode"
-class="qrbox">
-</div>
+<div id="qrcode"></div>
 
-<h2
-id="qrPalletId">
-</h2>
+<h2 id="qrPalletNumber"></h2>
 
-<div
-id="qrDetails">
-</div>
+<div id="qrInformation"></div>
 
 </div>
 
-
-<button
-class="black"
-onclick="window.print()">
-
+<button class="black" onclick="window.print()">
 🖨️ PRINT QR LABEL
-
 </button>
 
-
-<button
-class="green"
-onclick="home()">
-
+<button class="green" onclick="goHome()">
 DONE
-
 </button>
 
 </div>
 
 
-<div
-id="message"
-class="result">
-
-Ready.
-
-</div>
-
-<div class="small">
+<div class="footer">
 ABC Fruits Inventory System
 </div>
 
@@ -655,1829 +510,1676 @@ ABC Fruits Inventory System
 
 <script>
 
-
-/************************************************
- * API URL
- ************************************************/
+/* =====================================================
+   IMPORTANT:
+   THIS IS THE CURRENT WORKING APPS SCRIPT URL.
+   DO NOT CHANGE THIS URL.
+===================================================== */
 
 const API_URL =
-https://script.google.com/macros/s/AKfycbzgr34UdXde_Q5WClR-hz1wptyfhtBdHLPzCpOT24PZH-Qy3nkPicou40Q_CfOlU2hj/exec
+"https://script.google.com/macros/s/AKfycbzgr34UdXde_Q5WClR-hz1wptyfhtBdHLPzCpOT24PZH-Qy3nkPicou40Q_CfOlU2hj/exec";
 
-/************************************************
- * VARIABLES
- ************************************************/
-
-let scanner = null;
 
 let currentMode = "";
-
 let currentPallet = null;
 
-let selectedLocation = "";
+let selectedInwardLocation = "";
+let selectedTransferLocation = "";
+let selectedNewPalletLocation = "";
 
-let selectedNewLocation = "";
-
-
-/************************************************
- * SCREENS
- ************************************************/
-
-const screenIds = [
-
-"home",
-"modePage",
-"manualPage",
-"cameraPage",
-"palletPage",
-"locationPage",
-"transferPage",
-"outwardPage",
-"newPalletPage",
-"qrPage"
-
-];
+let htmlScanner = null;
 
 
-function hideAll() {
+/* =====================================================
+   SCREEN CONTROL
+===================================================== */
 
-screenIds.forEach(
-function(id) {
+function hideAllPages() {
 
-document
-.getElementById(id)
-.classList.add("hidden");
+  const pages = [
+    "home",
+    "modePage",
+    "manualPage",
+    "cameraPage",
+    "palletPage",
+    "inwardLocationPage",
+    "transferPage",
+    "outwardPage",
+    "palletMasterPage",
+    "qrPage"
+  ];
 
-});
+  pages.forEach(function(id) {
+
+    document
+      .getElementById(id)
+      .classList.add("hidden");
+
+  });
 
 }
 
 
-/************************************************
- * HOME
- ************************************************/
+function goHome() {
 
-function home() {
+  closeScanner();
 
-stopCamera();
+  hideAllPages();
 
-hideAll();
+  document
+    .getElementById("home")
+    .classList.remove("hidden");
 
-document
-.getElementById("home")
-.classList.remove("hidden");
+  currentPallet = null;
 
-currentPallet = null;
-
-selectedLocation = "";
-
-selectedNewLocation = "";
+  selectedInwardLocation = "";
+  selectedTransferLocation = "";
+  selectedNewPalletLocation = "";
 
 }
 
 
-/************************************************
- * MODE
- ************************************************/
+/* =====================================================
+   GENERIC API - JSONP
+===================================================== */
 
-function modePage(mode) {
+function apiCall(action, params, callback) {
 
-currentMode = mode;
-
-hideAll();
-
-document
-.getElementById("modePage")
-.classList.remove("hidden");
-
-document
-.getElementById("modeTitle")
-.innerText =
-mode;
+  const callbackName =
+    "abcFruits_" +
+    Date.now() +
+    "_" +
+    Math.floor(Math.random() * 1000000);
 
 
-document
-.getElementById("palletAction")
-.innerText =
-mode === "INWARD"
-? "📍 ASSIGN LOCATION"
-: mode === "TRANSFER"
-? "🔵 TRANSFER"
-: "🔴 OUTWARD";
-
-}
+  let finished = false;
 
 
-/************************************************
- * MANUAL PALLET
- ************************************************/
+  window[callbackName] = function(data) {
 
-function manualPallet() {
+    if (finished) {
+      return;
+    }
 
-hideAll();
+    finished = true;
 
-document
-.getElementById("manualPage")
-.classList.remove("hidden");
+    cleanupAPI(callbackName);
 
-document
-.getElementById("manualPalletId")
-.value = "";
+    callback(data);
 
-document
-.getElementById("manualPalletId")
-.focus();
-
-}
+  };
 
 
-/************************************************
- * MANUAL PALLET SUBMIT
- ************************************************/
-
-function manualPalletSubmit() {
-
-const id =
-document
-.getElementById(
-"manualPalletId"
-)
-.value
-.trim()
-.toUpperCase();
+  let url =
+    API_URL +
+    "?action=" +
+    encodeURIComponent(action);
 
 
-if (!id) {
+  if (params) {
 
-alert(
-"Enter Pallet ID."
-);
+    Object.keys(params).forEach(function(key) {
 
-return;
+      url +=
+        "&" +
+        encodeURIComponent(key) +
+        "=" +
+        encodeURIComponent(
+          params[key] == null
+            ? ""
+            : params[key]
+        );
 
-}
+    });
 
-
-loadPallet(id);
-
-}
-
-
-/************************************************
- * SCAN PALLET
- ************************************************/
-
-function scanPallet() {
-
-startScanner(
-"Scan Pallet QR",
-function(text) {
-
-loadPallet(
-String(text)
-.trim()
-.toUpperCase()
-);
-
-});
-
-}
+  }
 
 
-/************************************************
- * START SCANNER
- ************************************************/
+  url +=
+    "&prefix=" +
+    encodeURIComponent(callbackName);
 
-function startScanner(
-title,
-callback
-) {
+  /* Cache breaker */
 
-stopCamera();
-
-hideAll();
-
-document
-.getElementById(
-"cameraPage"
-)
-.classList.remove("hidden");
-
-document
-.getElementById(
-"cameraTitle"
-)
-.innerText =
-title;
+  url +=
+    "&_=" +
+    Date.now();
 
 
-scanner =
-new Html5Qrcode(
-"reader"
-);
+  const script =
+    document.createElement("script");
 
 
-scanner.start(
+  script.id =
+    callbackName;
 
-{
-facingMode:
-"environment"
-},
+  script.src =
+    url;
 
-{
-fps: 10,
-qrbox: {
-width: 250,
-height: 250
-}
-},
+  script.async =
+    true;
 
-function(text) {
 
-stopCamera();
+  script.onerror = function() {
 
-callback(text);
+    if (finished) {
+      return;
+    }
 
-},
+    finished = true;
 
-function(error) {}
+    cleanupAPI(callbackName);
 
-)
+    alert(
+      "❌ Could not connect to ABC Fruits server."
+    );
 
-.catch(
-function(error) {
+  };
 
-alert(
-"Camera error: " +
-error
-);
 
-});
+  document.head.appendChild(script);
+
+
+  setTimeout(function() {
+
+    if (!finished) {
+
+      finished = true;
+
+      cleanupAPI(callbackName);
+
+      alert(
+        "❌ Server response timeout."
+      );
+
+    }
+
+  }, 15000);
 
 }
 
 
-/************************************************
- * STOP CAMERA
- ************************************************/
+function cleanupAPI(callbackName) {
 
-function stopCamera() {
-
-if (!scanner) {
-
-return;
-
-}
+  try {
+    delete window[callbackName];
+  } catch (e) {}
 
 
-scanner
-.stop()
-.then(
-function() {
+  const oldScript =
+    document.getElementById(callbackName);
 
-scanner.clear();
 
-scanner = null;
-
-})
-.catch(
-function() {
-
-scanner = null;
-
-});
+  if (oldScript) {
+    oldScript.remove();
+  }
 
 }
 
 
-/************************************************
- * LOAD PALLET
- ************************************************/
+/* =====================================================
+   HOME
+===================================================== */
 
-function loadPallet(
-id
-) {
+function openMode(mode) {
 
-hideAll();
+  currentMode = mode;
 
-document
-.getElementById(
-"palletPage"
-)
-.classList.remove("hidden");
+  hideAllPages();
 
+  document
+    .getElementById("modePage")
+    .classList.remove("hidden");
 
-document
-.getElementById(
-"palletData"
-)
-.innerHTML =
-"🔍 Checking pallet...";
-
-
-api(
-"getPallet",
-{
-palletId: id
-},
-function(data) {
-
-if (!data.ok) {
-
-document
-.getElementById(
-"palletData"
-)
-.innerHTML =
-"<span class='error'>" +
-escapeHtml(
-data.message
-) +
-"</span>";
-
-return;
+  document
+    .getElementById("modeTitle")
+    .innerText =
+      mode === "INWARD"
+        ? "🟢 INWARD"
+        : mode === "TRANSFER"
+        ? "🔵 TRANSFER"
+        : "🔴 OUTWARD";
 
 }
 
 
-currentPallet =
-data;
+/* =====================================================
+   PALLET MASTER OPEN
+===================================================== */
 
+function openPalletMaster() {
 
-showPallet();
+  hideAllPages();
 
-});
+  document
+    .getElementById("palletMasterPage")
+    .classList.remove("hidden");
 
-}
+  selectedNewPalletLocation = "";
 
+  document
+    .getElementById("selectedNewLocation")
+    .innerHTML =
+      "No location selected.";
 
-/************************************************
- * SHOW PALLET
- ************************************************/
+  loadPalletNumbers();
 
-function showPallet() {
-
-hideAll();
-
-document
-.getElementById(
-"palletPage"
-)
-.classList.remove("hidden");
-
-
-const p =
-currentPallet;
-
-
-document
-.getElementById(
-"palletData"
-)
-.innerHTML =
-
-"<b>Pallet:</b> " +
-safe(p.palletId) +
-
-"<br><b>Batch:</b> " +
-safe(p.batchId) +
-
-"<br><b>Product:</b> " +
-safe(p.product) +
-
-"<br><b>Production:</b> " +
-safe(p.productionDate) +
-
-"<br><b>Expiry:</b> " +
-safe(p.expiryDate) +
-
-"<br><b>Box Weight:</b> " +
-safe(p.boxWeight) +
-" KG" +
-
-"<br><b>Original:</b> " +
-safe(p.originalBoxes) +
-
-"<br><b>Current:</b> " +
-safe(p.currentBoxes) +
-
-"<br><b>Current KG:</b> " +
-safe(p.currentKG) +
-
-"<br><b>Room:</b> " +
-safe(p.currentRoom) +
-
-"<br><b>Location:</b> " +
-safe(p.currentLocation) +
-
-"<br><b>Status:</b> " +
-safe(p.status);
-
-
-const btn =
-document
-.getElementById(
-"palletAction"
-);
-
-
-btn.innerText =
-currentMode === "INWARD"
-? "📍 ASSIGN LOCATION"
-: currentMode === "TRANSFER"
-? "🔵 TRANSFER"
-: "🔴 OUTWARD";
+  loadFreeLocations(
+    "newPalletLocations",
+    "NEWPALLET"
+  );
 
 }
 
 
-/************************************************
- * PALLET ACTION
- ************************************************/
-
-function palletAction() {
-
-if (
-currentMode ===
-"INWARD"
-) {
-
-openLocation();
-
-}
-
-else if (
-currentMode ===
-"TRANSFER"
-) {
-
-openTransfer();
-
-}
-
-else {
-
-openOutward();
-
-}
-
-}
-
-
-/************************************************
- * INWARD LOCATION
- ************************************************/
-
-function openLocation() {
-
-hideAll();
-
-document
-.getElementById(
-"locationPage"
-)
-.classList.remove("hidden");
-
-
-document
-.getElementById(
-"locationInfo"
-)
-.innerHTML =
-
-"<b>Pallet:</b> " +
-safe(currentPallet.palletId) +
-
-"<br><b>Product:</b> " +
-safe(currentPallet.product) +
-
-"<br><b>Current Location:</b> " +
-safe(currentPallet.currentLocation);
-
-
-loadFreeLocations(
-"freeLocations"
-);
-
-}
-
-
-/************************************************
- * LOAD FREE LOCATIONS
- ************************************************/
-
-function loadFreeLocations(
-elementId
-) {
-
-document
-.getElementById(
-elementId
-)
-.innerHTML =
-"Loading free locations...";
-
-
-api(
-"getFreeLocations",
-{},
-function(data) {
-
-if (!data.ok) {
-
-document
-.getElementById(
-elementId
-)
-.innerHTML =
-"<span class='error'>" +
-safe(data.message) +
-"</span>";
-
-return;
-
-}
-
-
-if (
-!data.locations ||
-data.locations.length === 0
-) {
-
-document
-.getElementById(
-elementId
-)
-.innerHTML =
-"No free locations.";
-
-return;
-
-}
-
-
-let html =
-"<b>FREE LOCATIONS: " +
-data.free +
-"</b><br><br>";
-
-
-data.locations.forEach(
-function(location) {
-
-html +=
-
-"<div class='free' " +
-"onclick=\"selectLocation('" +
-escapeAttribute(location) +
-"','" +
-elementId +
-"')\">" +
-
-"🟢 " +
-escapeHtml(location) +
-
-"</div>";
-
-});
-
-
-document
-.getElementById(
-elementId
-)
-.innerHTML =
-html;
-
-});
-
-}
-
-
-/************************************************
- * SELECT LOCATION
- ************************************************/
-
-function selectLocation(
-location,
-elementId
-) {
-
-if (
-elementId ===
-"newLocations"
-) {
-
-selectedNewLocation =
-location;
-
-
-document
-.getElementById(
-"selectedNewLocation"
-)
-.innerHTML =
-
-"Selected: <b>" +
-safe(location) +
-"</b>";
-
-}
-
-else {
-
-selectedLocation =
-location;
-
-
-document
-.getElementById(
-elementId
-)
-.innerHTML =
-
-"<b>Selected:</b> " +
-safe(location);
-
-}
-
-}
-
-
-/************************************************
- * SCAN LOCATION
- ************************************************/
-
-function scanLocation() {
-
-startScanner(
-"Scan Location QR",
-function(text) {
-
-selectedLocation =
-String(text)
-.trim()
-.toUpperCase();
-
-
-confirmInwardLocation();
-
-});
-
-}
-
-
-/************************************************
- * MANUAL LOCATION
- ************************************************/
-
-function manualLocation() {
-
-const location =
-prompt(
-"Enter Location"
-);
-
-
-if (!location) {
-return;
-}
-
-
-selectedLocation =
-location
-.trim()
-.toUpperCase();
-
-
-confirmInwardLocation();
-
-}
-
-
-/************************************************
- * CONFIRM INWARD LOCATION
- ************************************************/
-
-function confirmInwardLocation() {
-
-if (!selectedLocation) {
-
-alert(
-"Select location."
-);
-
-return;
-
-}
-
-
-if (
-String(
-currentPallet.currentLocation || ""
-)
-.toUpperCase() ===
-selectedLocation
-) {
-
-alert(
-"Pallet is already in this location."
-);
-
-return;
-
-}
-
-
-api(
-"getFreeLocations",
-{},
-function(data) {
-
-if (!data.ok) {
-
-alert(
-data.message
-);
-
-return;
-
-}
-
-
-if (
-data.locations.indexOf(
-selectedLocation
-) === -1
-) {
-
-alert(
-"❌ Location is occupied or invalid."
-);
-
-return;
-
-}
-
-
-api(
-"transfer",
-{
-palletId:
-currentPallet.palletId,
-
-location:
-selectedLocation
-},
-function(result) {
-
-if (!result.ok) {
-
-alert(
-"❌ " +
-result.message
-);
-
-return;
-
-}
-
-
-alert(
-"✅ INWARD COMPLETED\n\n" +
-"Location: " +
-selectedLocation
-);
-
-
-loadPallet(
-currentPallet.palletId
-);
-
-});
-
-});
-
-}
-
-
-/************************************************
- * TRANSFER
- ************************************************/
-
-function openTransfer() {
-
-hideAll();
-
-document
-.getElementById(
-"transferPage"
-)
-.classList.remove("hidden");
-
-
-document
-.getElementById(
-"transferInfo"
-)
-.innerHTML =
-
-"<b>Pallet:</b> " +
-safe(currentPallet.palletId) +
-
-"<br><b>Current:</b> " +
-safe(currentPallet.currentLocation);
-
-
-selectedLocation = "";
-
-}
-
-
-/************************************************
- * TRANSFER SCAN
- ************************************************/
-
-function scanTransferLocation() {
-
-startScanner(
-"Scan Destination QR",
-function(text) {
-
-selectedLocation =
-String(text)
-.trim()
-.toUpperCase();
-
-
-document
-.getElementById(
-"transferLocation"
-)
-.innerHTML =
-
-"Destination: <b>" +
-safe(selectedLocation) +
-"</b>";
-
-});
-
-}
-
-
-/************************************************
- * TRANSFER MANUAL
- ************************************************/
-
-function manualTransferLocation() {
-
-const location =
-prompt(
-"Enter Destination Location"
-);
-
-
-if (!location) {
-return;
-}
-
-
-selectedLocation =
-location
-.trim()
-.toUpperCase();
-
-
-document
-.getElementById(
-"transferLocation"
-)
-.innerHTML =
-
-"Destination: <b>" +
-safe(selectedLocation) +
-"</b>";
-
-}
-
-
-/************************************************
- * SAVE TRANSFER
- ************************************************/
-
-function saveTransfer() {
-
-if (!selectedLocation) {
-
-alert(
-"Select destination."
-);
-
-return;
-
-}
-
-
-api(
-"transfer",
-{
-palletId:
-currentPallet.palletId,
-
-location:
-selectedLocation
-},
-function(data) {
-
-if (!data.ok) {
-
-alert(
-"❌ " +
-data.message
-);
-
-return;
-
-}
-
-
-alert(
-"✅ TRANSFER COMPLETED\n\n" +
-data.fromLocation +
-" → " +
-data.toLocation
-);
-
-
-loadPallet(
-currentPallet.palletId
-);
-
-});
-
-}
-
-
-/************************************************
- * OUTWARD
- ************************************************/
-
-function openOutward() {
-
-hideAll();
-
-document
-.getElementById(
-"outwardPage"
-)
-.classList.remove("hidden");
-
-
-let available =
-Number(
-currentPallet.currentBoxes
-) || 0;
-
-
-if (
-available === 0 &&
-String(
-currentPallet.status
-)
-.toUpperCase() ===
-"READY"
-) {
-
-available =
-Number(
-currentPallet.originalBoxes
-) || 0;
-
-}
-
-
-document
-.getElementById(
-"outwardInfo"
-)
-.innerHTML =
-
-"<b>Pallet:</b> " +
-safe(currentPallet.palletId) +
-
-"<br><b>Product:</b> " +
-safe(currentPallet.product) +
-
-"<br><b>Available:</b> " +
-available +
-" boxes" +
-
-"<br><b>Location:</b> " +
-safe(currentPallet.currentLocation);
-
-}
-
-
-/************************************************
- * SAVE OUTWARD
- ************************************************/
-
-function saveOutward() {
-
-const boxes =
-Number(
-document
-.getElementById(
-"outwardBoxes"
-)
-.value
-);
-
-
-const dispatchNo =
-document
-.getElementById(
-"dispatchNo"
-)
-.value
-.trim();
-
-
-if (
-!boxes ||
-boxes <= 0
-) {
-
-alert(
-"Enter outward boxes."
-);
-
-return;
-
-}
-
-
-if (!dispatchNo) {
-
-alert(
-"Enter Dispatch No."
-);
-
-return;
-
-}
-
-
-api(
-"outward",
-{
-palletId:
-currentPallet.palletId,
-
-boxes:
-boxes,
-
-dispatchNo:
-dispatchNo
-},
-function(data) {
-
-if (!data.ok) {
-
-alert(
-"❌ " +
-data.message
-);
-
-return;
-
-}
-
-
-alert(
-
-"✅ OUTWARD COMPLETED\n\n" +
-
-"Boxes: " +
-data.boxes +
-
-"\nKG: " +
-data.kg +
-
-"\nRemaining: " +
-data.remainingBoxes
-
-);
-
-
-loadPallet(
-currentPallet.palletId
-);
-
-});
-
-}
-
-
-/************************************************
- * NEW PALLET PAGE
- ************************************************/
-
-function newPalletPage() {
-
-hideAll();
-
-document
-.getElementById(
-"newPalletPage"
-)
-.classList.remove("hidden");
-
-
-selectedNewLocation = "";
-
-
-loadPalletNumbers();
-
-loadFreeLocations(
-"newLocations"
-);
-
-}
-
-
-/************************************************
- * PALLET NUMBERS
- ************************************************/
+/* =====================================================
+   GET PALLET NUMBERS
+===================================================== */
 
 function loadPalletNumbers() {
 
-api(
-"getPalletNumbers",
-{},
-function(data) {
-
-if (!data.ok) {
-
-alert(
-data.message
-);
-
-return;
-
-}
+  document
+    .getElementById("nextPalletBox")
+    .innerHTML =
+      "Loading pallet number...";
 
 
-document
-.getElementById(
-"nextNumber"
-)
-.innerHTML =
+  apiCall(
+    "getPalletNumbers",
+    {},
+    function(data) {
 
-"<b>NEXT PALLET NUMBER</b><br>" +
+      if (!data || !data.ok) {
 
-"<span style='font-size:26px'>" +
+        document
+          .getElementById("nextPalletBox")
+          .innerHTML =
+            "<span class='error'>" +
+            escapeHTML(
+              data && data.message
+                ? data.message
+                : "Unable to load pallet number."
+            ) +
+            "</span>";
 
-safe(
-data.nextPallet
-) +
-
-"</span>";
-
-
-const select =
-document
-.getElementById(
-"oldPallet"
-);
+        return;
+      }
 
 
-select.innerHTML =
+      document
+        .getElementById("nextPalletBox")
+        .innerHTML =
 
-"<option value=''>" +
-"Use next pallet number" +
-"</option>";
+          "<b>NEXT PALLET NUMBER</b><br>" +
 
+          "<span style='font-size:28px'>" +
 
-(data.previous || [])
-.forEach(
-function(id) {
+          escapeHTML(
+            data.nextPallet
+          ) +
 
-const option =
-document.createElement(
-"option"
-);
-
-option.value =
-id;
-
-option.textContent =
-id;
-
-select.appendChild(
-option
-);
-
-});
-
-});
-
-}
+          "</span>";
 
 
-/************************************************
- * SCAN NEW LOCATION
- ************************************************/
-
-function scanNewLocation() {
-
-startScanner(
-"Scan Free Location QR",
-function(text) {
-
-const location =
-String(text)
-.trim()
-.toUpperCase();
+      const select =
+        document.getElementById(
+          "previousPallet"
+        );
 
 
-api(
-"getFreeLocations",
-{},
-function(data) {
+      select.innerHTML =
+        "<option value=''>" +
+        "Select previous OUT pallet" +
+        "</option>";
 
-if (!data.ok) {
 
-alert(
-data.message
-);
+      if (
+        data.previous &&
+        data.previous.length
+      ) {
 
-return;
+        data.previous.forEach(function(id) {
+
+          const option =
+            document.createElement("option");
+
+          option.value = id;
+          option.textContent = id;
+
+          select.appendChild(option);
+
+        });
+
+      }
+
+    }
+  );
 
 }
 
 
-if (
-data.locations.indexOf(
-location
-) === -1
+/* =====================================================
+   GET FREE LOCATIONS
+===================================================== */
+
+function loadFreeLocations(
+  elementID,
+  mode
 ) {
 
-alert(
-"❌ This location is occupied or invalid."
-);
-
-return;
-
-}
+  const element =
+    document.getElementById(elementID);
 
 
-selectedNewLocation =
-location;
+  element.innerHTML =
+    "Loading free locations...";
 
 
-document
-.getElementById(
-"selectedNewLocation"
-)
-.innerHTML =
+  apiCall(
+    "getFreeLocations",
+    {},
+    function(data) {
 
-"Selected: <b>" +
-safe(location) +
-"</b>";
+      if (!data || !data.ok) {
 
-});
+        element.innerHTML =
+          "<span class='error'>" +
 
-});
+          escapeHTML(
+            data && data.message
+              ? data.message
+              : "Unable to load locations."
+          ) +
 
-}
+          "</span>";
 
+        return;
 
-/************************************************
- * CREATE PALLET
- ************************************************/
-
-function createPallet() {
-
-const oldPallet =
-document
-.getElementById(
-"oldPallet"
-)
-.value;
+      }
 
 
-const nextText =
-document
-.getElementById(
-"nextNumber"
-)
-.innerText;
+      let locations =
+        data.locations || [];
 
 
-let palletId =
-nextText
-.trim()
-.split("\n")
-.pop()
-.trim();
+      if (!locations.length) {
+
+        element.innerHTML =
+          "❌ No free locations available.";
+
+        return;
+
+      }
 
 
-if (oldPallet) {
+      let html =
 
-palletId =
-oldPallet;
-
-}
-
-
-const batchId =
-document
-.getElementById(
-"newBatch"
-)
-.value
-.trim();
+        "<b>FREE LOCATIONS: " +
+        data.free +
+        "</b><br><br>";
 
 
-const product =
-document
-.getElementById(
-"newProduct"
-)
-.value
-.trim();
+      locations.forEach(function(location) {
+
+        html +=
+
+          "<div class='free' " +
+
+          "onclick=\"selectFreeLocation('" +
+
+          escapeAttribute(location) +
+
+          "','" +
+
+          escapeAttribute(mode) +
+
+          "')\">" +
+
+          "🟢 " +
+
+          escapeHTML(location) +
+
+          "</div>";
+
+      });
 
 
-const productionDate =
-document
-.getElementById(
-"newProductionDate"
-)
-.value;
+      element.innerHTML = html;
 
-
-const expiryDate =
-document
-.getElementById(
-"newExpiryDate"
-)
-.value;
-
-
-const weight =
-Number(
-document
-.getElementById(
-"newWeight"
-)
-.value
-);
-
-
-const boxes =
-Number(
-document
-.getElementById(
-"newBoxes"
-)
-.value
-);
-
-
-if (!batchId) {
-
-alert(
-"Enter Batch ID."
-);
-
-return;
+    }
+  );
 
 }
 
 
-if (!product) {
+/* =====================================================
+   SELECT FREE LOCATION
+===================================================== */
 
-alert(
-"Enter Product."
-);
-
-return;
-
-}
-
-
-if (!weight) {
-
-alert(
-"Enter Box Weight."
-);
-
-return;
-
-}
-
-
-if (!boxes) {
-
-alert(
-"Enter Number of Boxes."
-);
-
-return;
-
-}
-
-
-if (!selectedNewLocation) {
-
-alert(
-"Select or scan a FREE location."
-);
-
-return;
-
-}
-
-
-api(
-"createPallet",
-{
-palletId:
-palletId,
-
-batchId:
-batchId,
-
-product:
-product,
-
-productionDate:
-productionDate,
-
-expiryDate:
-expiryDate,
-
-boxWeight:
-weight,
-
-boxes:
-boxes,
-
-location:
-selectedNewLocation
-},
-function(data) {
-
-if (!data.ok) {
-
-alert(
-"❌ " +
-data.message
-);
-
-return;
-
-}
-
-
-showQR(
-data
-);
-
-});
-
-}
-
-
-/************************************************
- * SHOW QR
- ************************************************/
-
-function showQR(
-data
+function selectFreeLocation(
+  location,
+  mode
 ) {
 
-hideAll();
-
-document
-.getElementById(
-"qrPage"
-)
-.classList.remove("hidden");
+  location =
+    String(location)
+      .trim()
+      .toUpperCase();
 
 
-document
-.getElementById(
-"qrcode"
-)
-innerHTML = "";
+  if (mode === "NEWPALLET") {
+
+    selectedNewPalletLocation =
+      location;
 
 
-new QRCode(
-document.getElementById(
-"qrcode"
-),
-{
-text:
-data.palletId,
+    document
+      .getElementById(
+        "selectedNewLocation"
+      )
+      .innerHTML =
 
-width: 220,
+        "📍 Selected: <b>" +
+        escapeHTML(location) +
+        "</b>";
 
-height: 220,
-
-correctLevel:
-QRCode.CorrectLevel.H
-}
-);
+  }
 
 
-document
-.getElementById(
-"qrPalletId"
-)
-.innerText =
-data.palletId;
+  else if (mode === "INWARD") {
+
+    selectedInwardLocation =
+      location;
 
 
-document
-.getElementById(
-"qrDetails"
-)
-.innerHTML =
+    document
+      .getElementById(
+        "selectedInwardLocation"
+      )
+      .innerHTML =
 
-"<b>Product:</b> " +
-safe(
-document
-.getElementById(
-"newProduct"
-)
-.value
-) +
+        "📍 Selected: <b>" +
+        escapeHTML(location) +
+        "</b>";
 
-"<br><b>Batch:</b> " +
-safe(
-document
-.getElementById(
-"newBatch"
-)
-.value
-) +
+  }
 
-"<br><b>Boxes:</b> " +
-data.boxes +
 
-"<br><b>Location:</b> " +
-safe(data.location);
+  else if (mode === "TRANSFER") {
+
+    selectedTransferLocation =
+      location;
+
+
+    document
+      .getElementById(
+        "selectedTransferLocation"
+      )
+      .innerHTML =
+
+        "📍 Destination: <b>" +
+        escapeHTML(location) +
+        "</b>";
+
+  }
 
 }
 
 
-/************************************************
- * GENERIC JSONP API
- ************************************************/
+/* =====================================================
+   MANUAL PALLET
+===================================================== */
 
-function api(
-action,
-params,
-callback
+function typePalletID() {
+
+  hideAllPages();
+
+  document
+    .getElementById("manualPage")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("manualPallet")
+    .value = "";
+
+  document
+    .getElementById("manualPallet")
+    .focus();
+
+}
+
+
+function submitManualPallet() {
+
+  const id =
+    document
+      .getElementById("manualPallet")
+      .value
+      .trim()
+      .toUpperCase();
+
+
+  if (!id) {
+
+    alert(
+      "Enter Pallet ID."
+    );
+
+    return;
+
+  }
+
+
+  getPalletDetails(id);
+
+}
+
+
+/* =====================================================
+   PALLET QR SCAN
+===================================================== */
+
+function scanPalletQR() {
+
+  startScanner(
+    "SCAN PALLET QR",
+    function(text) {
+
+      const id =
+        String(text)
+          .trim()
+          .toUpperCase();
+
+
+      getPalletDetails(id);
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   START QR SCANNER
+===================================================== */
+
+function startScanner(
+  title,
+  callback
 ) {
 
-const callbackName =
-"abc_" +
-Date.now() +
-"_" +
-Math.floor(
-Math.random() * 100000
-);
+  closeScanner();
+
+  hideAllPages();
+
+  document
+    .getElementById("cameraPage")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("cameraTitle")
+    .innerText =
+      title;
 
 
-let finished = false;
+  htmlScanner =
+    new Html5Qrcode("reader");
 
 
-window[callbackName] =
-function(data) {
+  htmlScanner
+    .start(
+      {
+        facingMode: "environment"
+      },
+      {
+        fps: 10,
+        qrbox: {
+          width: 250,
+          height: 250
+        }
+      },
+      function(decodedText) {
 
-if (finished) {
-return;
-}
+        closeScanner();
 
-finished = true;
+        callback(decodedText);
 
-callback(data);
+      },
+      function(errorMessage) {
 
-cleanup(
-callbackName
-);
+        /* Ignore scan errors */
 
-};
+      }
+    )
+    .catch(function(error) {
 
+      alert(
+        "❌ Camera error: " +
+        error
+      );
 
-let url =
-API_URL +
-"?action=" +
-encodeURIComponent(
-action
-);
-
-
-Object.keys(params)
-.forEach(
-function(key) {
-
-url +=
-"&" +
-encodeURIComponent(key) +
-"=" +
-encodeURIComponent(
-params[key]
-);
-
-});
-
-
-url +=
-"&prefix=" +
-encodeURIComponent(
-callbackName
-) +
-"&t=" +
-Date.now();
-
-
-const script =
-document.createElement(
-"script"
-);
-
-
-script.id =
-callbackName;
-
-script.src =
-url;
-
-script.async =
-true;
-
-
-script.onerror =
-function() {
-
-if (finished) {
-return;
-}
-
-finished = true;
-
-cleanup(
-callbackName
-);
-
-alert(
-"❌ Could not connect to ABC Fruits server."
-);
-
-};
-
-
-document
-.head
-.appendChild(
-script
-);
-
-
-setTimeout(
-function() {
-
-if (!finished) {
-
-finished = true;
-
-cleanup(
-callbackName
-);
-
-alert(
-"❌ Server response timeout."
-);
-
-}
-
-},
-15000
-);
+    });
 
 }
 
 
-/************************************************
- * CLEANUP
- ************************************************/
+/* =====================================================
+   CLOSE SCANNER
+===================================================== */
 
-function cleanup(
-callbackName
+function closeScanner() {
+
+  if (!htmlScanner) {
+    return;
+  }
+
+
+  htmlScanner
+    .stop()
+    .then(function() {
+
+      htmlScanner.clear();
+
+      htmlScanner = null;
+
+    })
+    .catch(function() {
+
+      htmlScanner = null;
+
+    });
+
+}
+
+
+/* =====================================================
+   GET PALLET
+===================================================== */
+
+function getPalletDetails(
+  palletID
 ) {
 
-try {
+  hideAllPages();
 
-delete window[
-callbackName
-];
+  document
+    .getElementById("palletPage")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("palletDetails")
+    .innerHTML =
+      "🔍 Checking pallet...";
+
+
+  apiCall(
+    "getPallet",
+    {
+      palletId: palletID
+    },
+    function(data) {
+
+      if (!data || !data.ok) {
+
+        document
+          .getElementById("palletDetails")
+          .innerHTML =
+
+            "<span class='error'>" +
+
+            escapeHTML(
+              data && data.message
+                ? data.message
+                : "Pallet not found."
+            ) +
+
+            "</span>";
+
+        return;
+
+      }
+
+
+      currentPallet = data;
+
+      showPallet();
+
+    }
+  );
 
 }
-catch(e) {}
 
 
-const script =
-document.getElementById(
-callbackName
-);
+/* =====================================================
+   SHOW PALLET
+===================================================== */
+
+function showPallet() {
+
+  if (!currentPallet) {
+    return;
+  }
 
 
-if (script) {
+  hideAllPages();
 
-script.remove();
+  document
+    .getElementById("palletPage")
+    .classList.remove("hidden");
+
+
+  const p =
+    currentPallet;
+
+
+  document
+    .getElementById("palletDetails")
+    .innerHTML =
+
+      "<b>Pallet ID:</b> " +
+      safe(p.palletId) +
+
+      "<br><b>Batch:</b> " +
+      safe(p.batchId) +
+
+      "<br><b>Product:</b> " +
+      safe(p.product) +
+
+      "<br><b>Production Date:</b> " +
+      safe(p.productionDate) +
+
+      "<br><b>Expiry Date:</b> " +
+      safe(p.expiryDate) +
+
+      "<br><b>Box Weight:</b> " +
+      safe(p.boxWeight) +
+      " KG" +
+
+      "<br><b>Original Boxes:</b> " +
+      safe(p.originalBoxes) +
+
+      "<br><b>Current Boxes:</b> " +
+      safe(p.currentBoxes) +
+
+      "<br><b>Current KG:</b> " +
+      safe(p.currentKG) +
+
+      "<br><b>Cold Room:</b> " +
+      safe(p.currentRoom) +
+
+      "<br><b>Location:</b> " +
+      safe(p.currentLocation) +
+
+      "<br><b>Status:</b> " +
+      safe(p.status);
+
+
+  const button =
+    document.getElementById(
+      "palletNextButton"
+    );
+
+
+  if (currentMode === "INWARD") {
+
+    button.innerText =
+      "📍 ASSIGN LOCATION";
+
+  }
+
+  else if (currentMode === "TRANSFER") {
+
+    button.innerText =
+      "🔵 TRANSFER";
+
+  }
+
+  else if (currentMode === "OUTWARD") {
+
+    button.innerText =
+      "🔴 OUTWARD";
+
+  }
 
 }
 
+
+/* =====================================================
+   PALLET NEXT
+===================================================== */
+
+function palletNext() {
+
+  if (!currentPallet) {
+    return;
+  }
+
+
+  if (currentMode === "INWARD") {
+
+    openInwardLocation();
+
+  }
+
+  else if (currentMode === "TRANSFER") {
+
+    openTransfer();
+
+  }
+
+  else if (currentMode === "OUTWARD") {
+
+    openOutward();
+
+  }
+
 }
 
 
-/************************************************
- * SAFE HTML
- ************************************************/
+/* =====================================================
+   INWARD
+===================================================== */
 
-function safe(
-value
+function openInwardLocation() {
+
+  hideAllPages();
+
+  document
+    .getElementById("inwardLocationPage")
+    .classList.remove("hidden");
+
+
+  selectedInwardLocation = "";
+
+
+  document
+    .getElementById("inwardPalletInfo")
+    .innerHTML =
+
+      "<b>Pallet:</b> " +
+      safe(currentPallet.palletId) +
+
+      "<br><b>Product:</b> " +
+      safe(currentPallet.product);
+
+
+  document
+    .getElementById(
+      "selectedInwardLocation"
+    )
+    .innerHTML =
+      "No location selected.";
+
+
+  loadFreeLocations(
+    "freeLocationList",
+    "INWARD"
+  );
+
+}
+
+
+/* =====================================================
+   SCAN LOCATION
+===================================================== */
+
+function scanLocationQR(mode) {
+
+  startScanner(
+    "SCAN LOCATION QR",
+    function(text) {
+
+      const location =
+        String(text)
+          .trim()
+          .toUpperCase();
+
+
+      validateLocation(
+        location,
+        mode
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   MANUAL LOCATION
+===================================================== */
+
+function typeLocation(mode) {
+
+  const location =
+    prompt(
+      "Enter Location ID"
+    );
+
+
+  if (!location) {
+    return;
+  }
+
+
+  validateLocation(
+    location.trim().toUpperCase(),
+    mode
+  );
+
+}
+
+
+/* =====================================================
+   VALIDATE LOCATION
+===================================================== */
+
+function validateLocation(
+  location,
+  mode
 ) {
 
-if (
-value === null ||
-value === undefined ||
-value === ""
-) {
+  apiCall(
+    "getFreeLocations",
+    {},
+    function(data) {
 
-return "-";
+      if (!data || !data.ok) {
 
-}
+        alert(
+          "❌ Unable to check location."
+        );
 
+        return;
 
-return escapeHtml(
-String(value)
-);
-
-}
+      }
 
 
-function escapeHtml(
-value
-) {
+      if (
+        data.locations
+          .indexOf(location) === -1
+      ) {
 
-return String(value)
+        alert(
+          "❌ Location is occupied or invalid:\n" +
+          location
+        );
 
-.replace(
-/&/g,
-"&amp;"
-)
+        return;
 
-.replace(
-/</g,
-"&lt;"
-)
+      }
 
-.replace(
-/>/g,
-"&gt;"
-)
 
-.replace(
-/"/g,
-"&quot;"
-)
+      selectFreeLocation(
+        location,
+        mode
+      );
 
-.replace(
-/'/g,
-"&#039;"
-);
+    }
+  );
 
 }
 
 
-function escapeAttribute(
-value
+/* =====================================================
+   SAVE INWARD
+===================================================== */
+
+function saveInward() {
+
+  if (!selectedInwardLocation) {
+
+    alert(
+      "Select or scan a free location."
+    );
+
+    return;
+
+  }
+
+
+  apiCall(
+    "transfer",
+    {
+      palletId:
+        currentPallet.palletId,
+
+      location:
+        selectedInwardLocation
+    },
+    function(data) {
+
+      if (!data || !data.ok) {
+
+        alert(
+          "❌ " +
+          (
+            data && data.message
+              ? data.message
+              : "Operation failed."
+          )
+        );
+
+        return;
+
+      }
+
+
+      alert(
+        "✅ LOCATION SAVED\n\n" +
+        "Pallet: " +
+        currentPallet.palletId +
+        "\nLocation: " +
+        selectedInwardLocation
+      );
+
+
+      getPalletDetails(
+        currentPallet.palletId
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   TRANSFER
+===================================================== */
+
+function openTransfer() {
+
+  hideAllPages();
+
+  document
+    .getElementById("transferPage")
+    .classList.remove("hidden");
+
+
+  selectedTransferLocation = "";
+
+
+  document
+    .getElementById("transferInfo")
+    .innerHTML =
+
+      "<b>Pallet:</b> " +
+      safe(currentPallet.palletId) +
+
+      "<br><b>Product:</b> " +
+      safe(currentPallet.product) +
+
+      "<br><b>Current Location:</b> " +
+      safe(currentPallet.currentLocation);
+
+
+  document
+    .getElementById(
+      "selectedTransferLocation"
+    )
+    .innerHTML =
+      "No destination selected.";
+
+
+  loadFreeLocations(
+    "transferFreeLocations",
+    "TRANSFER"
+  );
+
+}
+
+
+/* =====================================================
+   SAVE TRANSFER
+===================================================== */
+
+function saveTransfer() {
+
+  if (!selectedTransferLocation) {
+
+    alert(
+      "Select destination location."
+    );
+
+    return;
+
+  }
+
+
+  apiCall(
+    "transfer",
+    {
+      palletId:
+        currentPallet.palletId,
+
+      location:
+        selectedTransferLocation
+    },
+    function(data) {
+
+      if (!data || !data.ok) {
+
+        alert(
+          "❌ " +
+          (
+            data && data.message
+              ? data.message
+              : "Transfer failed."
+          )
+        );
+
+        return;
+
+      }
+
+
+      alert(
+        "✅ TRANSFER COMPLETED\n\n" +
+        data.fromLocation +
+        " → " +
+        data.toLocation
+      );
+
+
+      getPalletDetails(
+        currentPallet.palletId
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   OUTWARD
+===================================================== */
+
+function openOutward() {
+
+  hideAllPages();
+
+  document
+    .getElementById("outwardPage")
+    .classList.remove("hidden");
+
+
+  let available =
+    Number(
+      currentPallet.currentBoxes
+    ) || 0;
+
+
+  if (
+    available === 0 &&
+    String(
+      currentPallet.status || ""
+    ).toUpperCase() === "READY"
+  ) {
+
+    available =
+      Number(
+        currentPallet.originalBoxes
+      ) || 0;
+
+  }
+
+
+  document
+    .getElementById("outwardInfo")
+    .innerHTML =
+
+      "<b>Pallet:</b> " +
+      safe(currentPallet.palletId) +
+
+      "<br><b>Product:</b> " +
+      safe(currentPallet.product) +
+
+      "<br><b>Available Boxes:</b> " +
+      available +
+
+      "<br><b>Location:</b> " +
+      safe(currentPallet.currentLocation);
+
+
+  document
+    .getElementById("outwardBoxes")
+    .value = "";
+
+  document
+    .getElementById("dispatchNumber")
+    .value = "";
+
+}
+
+
+/* =====================================================
+   SAVE OUTWARD
+===================================================== */
+
+function saveOutward() {
+
+  const boxes =
+    Number(
+      document
+        .getElementById("outwardBoxes")
+        .value
+    );
+
+
+  const dispatchNo =
+    document
+      .getElementById("dispatchNumber")
+      .value
+      .trim();
+
+
+  if (!boxes || boxes <= 0) {
+
+    alert(
+      "Enter outward boxes."
+    );
+
+    return;
+
+  }
+
+
+  if (!dispatchNo) {
+
+    alert(
+      "Enter Dispatch No."
+    );
+
+    return;
+
+  }
+
+
+  apiCall(
+    "outward",
+    {
+      palletId:
+        currentPallet.palletId,
+
+      boxes:
+        boxes,
+
+      dispatchNo:
+        dispatchNo
+    },
+    function(data) {
+
+      if (!data || !data.ok) {
+
+        alert(
+          "❌ " +
+          (
+            data && data.message
+              ? data.message
+              : "Outward failed."
+          )
+        );
+
+        return;
+
+      }
+
+
+      alert(
+        "✅ OUTWARD COMPLETED\n\n" +
+        "Boxes: " +
+        data.boxes +
+        "\nKG: " +
+        data.kg +
+        "\nRemaining: " +
+        data.remainingBoxes
+      );
+
+
+      getPalletDetails(
+        currentPallet.palletId
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   CREATE NEW PALLET
+===================================================== */
+
+function createNewPallet() {
+
+  const previous =
+    document
+      .getElementById("previousPallet")
+      .value
+      .trim();
+
+
+  const nextText =
+    document
+      .getElementById("nextPalletBox")
+      .innerText;
+
+
+  let palletID =
+    extractPalletNumber(nextText);
+
+
+  if (previous) {
+
+    palletID =
+      previous;
+
+  }
+
+
+  const batchID =
+    document
+      .getElementById("batchID")
+      .value
+      .trim();
+
+
+  const product =
+    document
+      .getElementById("product")
+      .value
+      .trim();
+
+
+  const productionDate =
+    document
+      .getElementById("productionDate")
+      .value;
+
+
+  const expiryDate =
+    document
+      .getElementById("expiryDate")
+      .value;
+
+
+  const boxWeight =
+    Number(
+      document
+        .getElementById("boxWeight")
+        .value
+    );
+
+
+  const boxes =
+    Number(
+      document
+        .getElementById("numberOfBoxes")
+        .value
+    );
+
+
+  if (!batchID) {
+
+    alert(
+      "Enter Batch ID."
+    );
+
+    return;
+
+  }
+
+
+  if (!product) {
+
+    alert(
+      "Enter Product."
+    );
+
+    return;
+
+  }
+
+
+  if (!boxWeight || boxWeight <= 0) {
+
+    alert(
+      "Enter Box Weight KG."
+    );
+
+    return;
+
+  }
+
+
+  if (!boxes || boxes <= 0) {
+
+    alert(
+      "Enter Number of Boxes."
+    );
+
+    return;
+
+  }
+
+
+  if (!selectedNewPalletLocation) {
+
+    alert(
+      "Select or scan a FREE location."
+    );
+
+    return;
+
+  }
+
+
+  apiCall(
+    "createPallet",
+    {
+      palletId:
+        palletID,
+
+      batchId:
+        batchID,
+
+      product:
+        product,
+
+      productionDate:
+        productionDate,
+
+      expiryDate:
+        expiryDate,
+
+      boxWeight:
+        boxWeight,
+
+      boxes:
+        boxes,
+
+      location:
+        selectedNewPalletLocation
+    },
+    function(data) {
+
+      if (!data || !data.ok) {
+
+        alert(
+          "❌ " +
+          (
+            data && data.message
+              ? data.message
+              : "Pallet creation failed."
+          )
+        );
+
+        return;
+
+      }
+
+
+      showGeneratedQR(
+        data,
+        product,
+        batchID,
+        boxes,
+        selectedNewPalletLocation
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   EXTRACT PALLET NUMBER
+===================================================== */
+
+function extractPalletNumber(text) {
+
+  const match =
+    String(text)
+      .match(
+        /PAL-\d{6}/
+      );
+
+
+  if (match) {
+
+    return match[0];
+
+  }
+
+
+  return "PAL-000001";
+
+}
+
+
+/* =====================================================
+   SHOW GENERATED QR
+===================================================== */
+
+function showGeneratedQR(
+  data,
+  product,
+  batchID,
+  boxes,
+  location
 ) {
 
-return String(value)
-.replace(
-/'/g,
-"\\'"
-);
+  hideAllPages();
+
+  document
+    .getElementById("qrPage")
+    .classList.remove("hidden");
+
+
+  const qrBox =
+    document
+      .getElementById("qrcode");
+
+
+  qrBox.innerHTML = "";
+
+
+  new QRCode(
+    qrBox,
+    {
+      text:
+        data.palletId,
+
+      width:
+        220,
+
+      height:
+        220,
+
+      correctLevel:
+        QRCode.CorrectLevel.H
+    }
+  );
+
+
+  document
+    .getElementById("qrPalletNumber")
+    .innerText =
+      data.palletId;
+
+
+  document
+    .getElementById("qrInformation")
+    .innerHTML =
+
+      "<b>Product:</b> " +
+      safe(product) +
+
+      "<br><b>Batch:</b> " +
+      safe(batchID) +
+
+      "<br><b>Boxes:</b> " +
+      safe(boxes) +
+
+      "<br><b>Location:</b> " +
+      safe(location);
+
+}
+
+
+/* =====================================================
+   SECURITY / DISPLAY
+===================================================== */
+
+function safe(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return "-";
+
+  }
+
+
+  return escapeHTML(
+    String(value)
+  );
+
+}
+
+
+function escapeHTML(value) {
+
+  return String(value)
+
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+function escapeAttribute(value) {
+
+  return String(value)
+
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+
+    .replace(/"/g, "&quot;");
 
 }
 
 </script>
 
 </body>
-
 </html>
