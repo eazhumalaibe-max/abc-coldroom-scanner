@@ -6,6 +6,7 @@
 <title>ABC Fruits | Inventory Management</title>
 
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 *{
@@ -297,6 +298,11 @@ th{
   color:#697386;
   font-size:13px;
 }
+.fifo-priority{background:#e8f7ee;color:#126b3a;}
+.expiring{background:#fff4d6;color:#8a5a00;}
+.expired{background:#fde7e7;color:#a71919;}
+.priority-card{border-left:5px solid #0b3d2e;}
+.alert-card{border-left:5px solid #b7791f;}
 
 .full{
   grid-column:1/-1;
@@ -394,6 +400,10 @@ th{
       🏷️ Items
     </button>
 
+    <button class="tab" onclick="showPage('stockaudit',this)">
+      🔍 Stock Audit
+    </button>
+
   </div>
 
 
@@ -472,18 +482,27 @@ th{
 
     <div class="card">
       <h3>Storage Type</h3>
+      <div class="table-wrap"><table id="storageTable"><thead><tr><th>Storage Type</th><th>Stock KG</th></tr></thead><tbody></tbody></table></div>
+    </div>
 
-      <div class="table-wrap">
-        <table id="storageTable">
-          <thead>
-            <tr>
-              <th>Storage Type</th>
-              <th>Stock KG</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <div class="grid2">
+      <div class="card alert-card">
+        <h3>⏳ Expiry Watch</h3>
+        <div class="grid2">
+          <div class="stat"><div class="title">EXPIRING ≤ 7 DAYS</div><div class="number" id="dExpiring">0</div></div>
+          <div class="stat"><div class="title">EXPIRED</div><div class="number" id="dExpired">0</div></div>
+        </div>
       </div>
+      <div class="card priority-card">
+        <h3>🥇 FIFO Priority</h3>
+        <p class="muted">Oldest production date first. Expiry is shown separately.</p>
+        <div id="fifoTopMessage" class="qr-result">Loading FIFO...</div>
+      </div>
+    </div>
+
+    <div class="card priority-card">
+      <h3>📦 FIFO Queue / Expiry Watch</h3>
+      <div class="table-wrap"><table id="fifoTable"><thead><tr><th>FIFO</th><th>Pallet</th><th>Item</th><th>Batch</th><th>Production Date</th><th>Expiry Date</th><th>Expiry Status</th><th>Location</th><th>Boxes</th><th>KG</th></tr></thead><tbody></tbody></table></div>
     </div>
 
   </section>
@@ -561,13 +580,18 @@ th{
       <div class="grid2">
 
         <div>
-          <label>Pallet ID</label>
-          <input id="inPallet" placeholder="PAL-000001">
+          <label>Next Pallet Number</label>
+          <input id="inPallet" placeholder="PAL-000001" readonly>
+          <div class="muted" style="margin-top:5px">
+            Pallet number is automatically taken from Pallet Queue.
+          </div>
         </div>
 
         <div>
-          <label>Batch ID *</label>
-          <input id="inBatch" placeholder="B001">
+          <label>Pallet Queue</label>
+          <select id="inPalletQueue" onchange="selectInwardPallet(this.value)">
+            <option value="">Loading...</option>
+          </select>
         </div>
 
         <div class="full">
@@ -593,6 +617,11 @@ th{
         </div>
 
         <div>
+          <label>Batch ID *</label>
+          <input id="inBatch" placeholder="B001">
+        </div>
+
+        <div>
           <label>Production Date</label>
           <input id="inProductionDate" type="date">
         </div>
@@ -613,14 +642,6 @@ th{
         </div>
 
         <div>
-          <label>Location *</label>
-          <select id="inLocation">
-            <option value="">Loading free locations...</option>
-          </select>
-          <div class="muted" style="margin-top:5px">RACK = Cold Room | FLOOR/TEMP/HOLD/REPROCESS = overflow/control tags</div>
-        </div>
-
-        <div>
           <label>Operator</label>
           <input id="inOperator" placeholder="Operator name">
         </div>
@@ -631,8 +652,6 @@ th{
             <option value="">Select Team</option>
             <option>Production</option>
             <option>Packing</option>
-            <option>Warehouse</option>
-            <option>Loading</option>
             <option>QC</option>
             <option>Dispatch</option>
           </select>
@@ -645,9 +664,7 @@ th{
             <option>Production</option>
             <option>Packing</option>
             <option>QC</option>
-            <option>Loading</option>
-            <option>Cold Room Entry</option>
-            <option>Storage</option>
+            <option>Dispatch</option>
           </select>
         </div>
 
@@ -656,13 +673,25 @@ th{
       <div class="actions">
 
         <button class="btn" onclick="createPallet()">
-          ✅ Create / Inward
+          ✅ CREATE INWARD + GENERATE QR
         </button>
 
         <button class="btn secondary" onclick="loadPalletNumbers()">
-          Get Pallet Number
+          🔄 Refresh Pallet Queue
         </button>
 
+      </div>
+
+      <div id="inwardQRResult" class="qr-result" style="display:none;margin-top:15px">
+        <h3>✅ Pallet QR Generated</h3>
+        <div id="inwardQRCode" style="display:flex;justify-content:center;margin:15px 0"></div>
+        <div id="inwardQRText" style="text-align:center;font-weight:bold"></div>
+        <div class="actions" style="justify-content:center">
+          <button class="btn" onclick="printInwardQR()">🖨️ PRINT QR LABEL</button>
+        </div>
+        <div class="muted" style="text-align:center">
+          Paste this QR label on the physical pallet. Storage location will be assigned later by Transfer/Warehouse team.
+        </div>
       </div>
 
     </div>
@@ -1045,16 +1074,7 @@ th{
           <thead>
 
             <tr>
-              <th>Pallet</th>
-              <th>Item Code</th>
-              <th>Item</th>
-              <th>Batch</th>
-              <th>Room</th>
-              <th>Location</th>
-              <th>Storage</th>
-              <th>Boxes</th>
-              <th>KG</th>
-              <th>Status</th>
+              <th>FIFO</th><th>Pallet</th><th>Item Code</th><th>Item</th><th>Batch</th><th>Production Date</th><th>Expiry Date</th><th>Expiry Status</th><th>Room</th><th>Location</th><th>Storage</th><th>Boxes</th><th>KG</th><th>Status</th>
             </tr>
 
           </thead>
@@ -1115,6 +1135,139 @@ th{
     </div>
 
   </section>
+
+
+  <!-- =====================================================
+       STOCK AUDIT
+  ====================================================== -->
+
+  <section id="stockaudit" class="page">
+
+    <div class="card">
+
+      <h2>🔍 Stock Audit</h2>
+      <p class="muted">
+        Weekly / Monthly physical stock verification.
+        Scan the location QR first, then scan each pallet QR in that location.
+      </p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Audit Type</label>
+          <select id="auditType">
+            <option>WEEKLY</option>
+            <option>MONTHLY</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="auditOperator" placeholder="Auditor name">
+        </div>
+
+        <div>
+          <label>Location</label>
+          <input id="auditLocation" placeholder="CR01-A01-01">
+        </div>
+
+        <div>
+          <label>Scan Location QR</label>
+          <button class="btn blue" style="width:100%" onclick="startAuditLocationScanner()">
+            📷 SCAN LOCATION QR
+          </button>
+        </div>
+
+      </div>
+
+      <div id="auditLocationReader" style="margin-top:15px"></div>
+
+      <div class="actions">
+        <button class="btn" onclick="loadAuditLocation()">
+          📍 LOAD LOCATION STOCK
+        </button>
+        <button class="btn secondary" onclick="stopAuditScanner()">
+          Stop Scanner
+        </button>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Expected Stock at Location</h3>
+
+      <div id="auditSummary" class="qr-result">
+        Scan/select a location.
+      </div>
+
+      <div class="table-wrap">
+        <table id="auditExpectedTable">
+          <thead>
+            <tr>
+              <th>Pallet</th>
+              <th>Item</th>
+              <th>Batch</th>
+              <th>Production</th>
+              <th>Expiry</th>
+              <th>Boxes</th>
+              <th>KG</th>
+              <th>Audit</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Scan Physical Pallet</h3>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet QR / Pallet ID</label>
+          <input id="auditPallet" placeholder="PAL-000001">
+        </div>
+
+        <div>
+          <label>Scanned Boxes</label>
+          <input id="auditBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Scanned KG</label>
+          <input id="auditKG" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Remarks</label>
+          <input id="auditRemarks" placeholder="Any physical variance">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="btn blue" onclick="startAuditPalletScanner()">
+          📷 SCAN PALLET QR
+        </button>
+        <button class="btn" onclick="checkStockAudit()">
+          ✅ VERIFY PALLET
+        </button>
+      </div>
+
+      <div id="auditPalletReader" style="margin-top:15px"></div>
+
+      <div id="auditResult" class="qr-result">
+        Waiting for pallet scan.
+      </div>
+
+    </div>
+
+  </section>
+
 
 </div>
 
@@ -1368,6 +1521,24 @@ function showPage(
 
 
 /* =========================================================
+   HOME / OPERATION RESET
+========================================================= */
+function resetFormFields(pageId){
+  const page=document.getElementById(pageId); if(!page)return;
+  page.querySelectorAll("input, textarea").forEach(function(el){if(el.type!=="button"&&el.type!=="submit")el.value="";});
+  page.querySelectorAll("select").forEach(function(el){el.selectedIndex=0;});
+}
+async function goHomeAfterOperation(message){
+  const activePage=document.querySelector(".page.active"); if(activePage)resetFormFields(activePage.id);
+  await stopScanner();
+  const dashboardButton=document.querySelector('.tab[onclick*="showPage(\'dashboard\'"]');
+  showPage("dashboard",dashboardButton);
+  showMessage(message||"Operation completed successfully.","ok");
+  await loadDashboard();
+}
+
+
+/* =========================================================
    PALLET LIST
 ========================================================= */
 
@@ -1441,6 +1612,26 @@ async function loadPalletNumbers(){
     );
 
 
+    const inwardQueue =
+      document.getElementById("inPalletQueue");
+
+    if (inwardQueue) {
+      inwardQueue.innerHTML = "";
+
+      const nextIn =
+        document.createElement("option");
+      nextIn.value = data.nextPallet;
+      nextIn.textContent = "NEXT → " + data.nextPallet;
+      inwardQueue.appendChild(nextIn);
+
+      (data.previous || []).forEach(function(id) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = "USED → " + id;
+        inwardQueue.appendChild(option);
+      });
+    }
+
     document.getElementById(
       "inPallet"
     ).value =
@@ -1449,6 +1640,11 @@ async function loadPalletNumbers(){
 
   }catch(e){}
 
+}
+
+function selectInwardPallet(value){
+  if (!value) return;
+  document.getElementById("inPallet").value = value;
 }
 
 
@@ -1658,6 +1854,12 @@ function renderPalletResult(
 
     Expiry:
     ${p.expiryDate || "-"}
+    <br>
+
+    Expiry Status:
+    <span class="badge ${p.expiryStatus === "EXPIRED" ? "expired" : (p.expiryStatus && (p.expiryStatus.indexOf("EXPIRING") === 0 || p.expiryStatus === "EXPIRES TODAY") ? "expiring" : "")}">
+      ${p.expiryStatus || "NO EXPIRY"}
+    </span>
     <br>
 
     Boxes:
@@ -2105,76 +2307,37 @@ function showMasterItem(
 async function createPallet(){
 
   const palletId =
-    document.getElementById(
-      "inPallet"
-    ).value.trim();
-
+    document.getElementById("inPallet").value.trim();
 
   const batchId =
-    document.getElementById(
-      "inBatch"
-    ).value.trim();
-
+    document.getElementById("inBatch").value.trim();
 
   const itemCode =
-    document.getElementById(
-      "inItemCode"
-    ).value.trim();
-
+    document.getElementById("inItemCode").value.trim();
 
   const product =
-    document.getElementById(
-      "inProduct"
-    ).value.trim();
-
+    document.getElementById("inProduct").value.trim();
 
   const productionDate =
-    document.getElementById(
-      "inProductionDate"
-    ).value;
-
+    document.getElementById("inProductionDate").value;
 
   const expiryDate =
-    document.getElementById(
-      "inExpiryDate"
-    ).value;
-
+    document.getElementById("inExpiryDate").value;
 
   const boxWeight =
-    document.getElementById(
-      "inBoxWeight"
-    ).value;
-
+    document.getElementById("inBoxWeight").value;
 
   const boxes =
-    document.getElementById(
-      "inBoxes"
-    ).value;
-
-
-  const location =
-    document.getElementById(
-      "inLocation"
-    ).value;
-
+    document.getElementById("inBoxes").value;
 
   const operator =
-    document.getElementById(
-      "inOperator"
-    ).value;
-
+    document.getElementById("inOperator").value;
 
   const team =
-    document.getElementById(
-      "inTeam"
-    ).value;
-
+    document.getElementById("inTeam").value;
 
   const checkpoint =
-    document.getElementById(
-      "inCheckpoint"
-    ).value;
-
+    document.getElementById("inCheckpoint").value;
 
   if(
     !palletId ||
@@ -2182,18 +2345,15 @@ async function createPallet(){
     !product ||
     !boxWeight ||
     !boxes ||
-    !location
+    !team ||
+    !checkpoint
   ){
-
     showMessage(
-      "Please complete all required fields.",
+      "Please complete Pallet, Batch, Item, Dates, Box/Boxes, Team and Checkpoint.",
       "error"
     );
-
     return;
-
   }
-
 
   try{
 
@@ -2209,46 +2369,109 @@ async function createPallet(){
           expiryDate,
           boxWeight,
           boxes,
-          location,
+          location:"",
           operator,
           team,
           checkpoint
         }
       );
 
+    showInwardQR(palletId, data.message || "Pallet created successfully.");
 
-    showMessage(
-      data.message,
-      "ok"
-    );
-
-
-    document.getElementById(
-      "scanPallet"
-    ).value =
-      palletId;
-
-
-    renderPalletResult(
-      await api(
-        "getPallet",
-        {
-          palletId
-        }
-      )
-    );
-
-
-    await loadFreeLocations();
-
+    // Refresh queue without sending the user to another page.
     await loadPalletNumbers();
 
-    await loadDashboard();
+    // Keep the newly generated QR visible until the user prints it.
+    showMessage(
+      "Pallet created. QR generated. Paste the QR on the physical pallet.",
+      "ok"
+    );
 
   }catch(e){}
 
 }
 
+function showInwardQR(palletId, message){
+
+  const wrap =
+    document.getElementById("inwardQRResult");
+
+  const qr =
+    document.getElementById("inwardQRCode");
+
+  const text =
+    document.getElementById("inwardQRText");
+
+  if(!wrap || !qr || !text) return;
+
+  qr.innerHTML = "";
+  text.textContent = palletId;
+
+  if(typeof QRCode !== "undefined"){
+    new QRCode(qr,{
+      text:palletId,
+      width:220,
+      height:220,
+      correctLevel:QRCode.CorrectLevel.M
+    });
+  }else{
+    qr.innerHTML =
+      "<div>QR library unavailable. Pallet ID: " +
+      escapeHtml(palletId) +
+      "</div>";
+  }
+
+  wrap.style.display = "block";
+
+  wrap.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+function printInwardQR(){
+
+  const palletId =
+    document.getElementById("inPallet").value.trim();
+
+  const qrCanvas =
+    document.querySelector("#inwardQRCode canvas");
+
+  const qrImg =
+    document.querySelector("#inwardQRCode img");
+
+  let src = "";
+
+  if(qrCanvas){
+    src = qrCanvas.toDataURL("image/png");
+  }else if(qrImg){
+    src = qrImg.src;
+  }
+
+  if(!src){
+    showMessage("QR is not ready yet.","error");
+    return;
+  }
+
+  const win =
+    window.open("","_blank","width=500,height=650");
+
+  win.document.write(`
+    <html>
+    <head><title>ABC Fruits - ${escapeHtml(palletId)}</title></head>
+    <body style="font-family:Arial;text-align:center;padding:30px">
+      <h2>🍎 ABC Fruits</h2>
+      <h3>Pallet QR</h3>
+      <img src="${src}" style="width:280px;height:280px">
+      <h2>${escapeHtml(palletId)}</h2>
+      <p>Paste this QR label on the physical pallet.</p>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
 
 /* =========================================================
    TRANSFER LOOKUP
@@ -2416,11 +2639,7 @@ async function transferPallet(){
     `;
 
 
-    await loadTransferLocations();
-
-    await loadInventory();
-
-    await loadDashboard();
+    await goHomeAfterOperation(data.message);
 
   }catch(e){}
 
@@ -2609,9 +2828,7 @@ async function outwardPallet(){
     `;
 
 
-    await loadInventory();
-
-    await loadDashboard();
+    await goHomeAfterOperation(data.message);
 
   }catch(e){}
 
@@ -2811,9 +3028,7 @@ async function reprocessPallet(){
     `;
 
 
-    await loadInventory();
-
-    await loadDashboard();
+    await goHomeAfterOperation(data.message);
 
   }catch(e){}
 
@@ -2895,9 +3110,7 @@ async function recordWastage(){
     );
 
 
-    await loadInventory();
-
-    await loadDashboard();
+    await goHomeAfterOperation(data.message);
 
   }catch(e){}
 
@@ -2995,54 +3208,24 @@ async function loadInventory(){
         }
 
 
+        const expiryClass=item.expiryStatus==="EXPIRED"?"expired":(item.expiryStatus&&(item.expiryStatus.indexOf("EXPIRING")===0||item.expiryStatus==="EXPIRES TODAY")?"expiring":"");
+        const fifoClass=item.fifoStatus==="FIFO PRIORITY"?"fifo-priority":"";
+
         tr.innerHTML = `
-
-          <td>
-            <strong>
-              ${escapeHtml(item.palletId)}
-            </strong>
-          </td>
-
-          <td>
-            ${escapeHtml(item.itemCode || "-")}
-          </td>
-
-          <td>
-            ${escapeHtml(item.itemName || "-")}
-          </td>
-
-          <td>
-            ${escapeHtml(item.batchId || "-")}
-          </td>
-
-          <td>
-            ${escapeHtml(item.room || "-")}
-          </td>
-
-          <td>
-            <strong>
-              ${escapeHtml(item.location || "-")}
-            </strong>
-          </td>
-
-          <td>
-            ${escapeHtml(item.storageType || "RACK")}
-          </td>
-
-          <td>
-            ${Number(item.boxes || 0).toLocaleString()}
-          </td>
-
-          <td>
-            ${Number(item.kg || 0).toLocaleString()}
-          </td>
-
-          <td>
-            <span class="badge ${badgeClass}">
-              ${escapeHtml(item.status || "-")}
-            </span>
-          </td>
-
+          <td><span class="badge ${fifoClass}">${escapeHtml(item.fifoStatus||"-")}</span></td>
+          <td><strong>${escapeHtml(item.palletId)}</strong></td>
+          <td>${escapeHtml(item.itemCode||"-")}</td>
+          <td>${escapeHtml(item.itemName||"-")}</td>
+          <td>${escapeHtml(item.batchId||"-")}</td>
+          <td>${escapeHtml(item.productionDate||"-")}</td>
+          <td>${escapeHtml(item.expiryDate||"-")}</td>
+          <td><span class="badge ${expiryClass}">${escapeHtml(item.expiryStatus||"NO EXPIRY")}</span></td>
+          <td>${escapeHtml(item.room||"-")}</td>
+          <td><strong>${escapeHtml(item.location||"-")}</strong></td>
+          <td>${escapeHtml(item.storageType||"RACK")}</td>
+          <td>${Number(item.boxes||0).toLocaleString()}</td>
+          <td>${Number(item.kg||0).toLocaleString()}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(item.status||"-")}</span></td>
         `;
 
 
@@ -3059,143 +3242,322 @@ async function loadInventory(){
 }
 
 
+
 /* =========================================================
-   DASHBOARD
+   STOCK AUDIT
 ========================================================= */
 
-async function loadDashboard(){
+let auditLocationScanner = null;
+let auditPalletScanner = null;
+
+async function startAuditLocationScanner(){
+
+  try{
+
+    await stopAuditScanner();
+
+    auditLocationScanner =
+      new Html5Qrcode("auditLocationReader");
+
+    await auditLocationScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+
+        const location =
+          parseQRValue(decodedText);
+
+        document.getElementById("auditLocation").value =
+          location;
+
+        await loadAuditLocation();
+        await stopAuditScanner();
+
+      },
+      function(){}
+
+    );
+
+  }catch(e){
+
+    showMessage(
+      "Location camera could not start. Enter location manually.",
+      "error"
+    );
+
+  }
+}
+
+async function startAuditPalletScanner(){
+
+  try{
+
+    await stopAuditScanner();
+
+    auditPalletScanner =
+      new Html5Qrcode("auditPalletReader");
+
+    await auditPalletScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+
+        const palletId =
+          parseQRValue(decodedText);
+
+        document.getElementById("auditPallet").value =
+          palletId;
+
+        await lookupAuditPallet(palletId);
+        await stopAuditScanner();
+
+      },
+      function(){}
+
+    );
+
+  }catch(e){
+
+    showMessage(
+      "Pallet camera could not start. Enter pallet ID manually.",
+      "error"
+    );
+
+  }
+}
+
+async function stopAuditScanner(){
+
+  try{
+    if(auditLocationScanner){
+      await auditLocationScanner.stop();
+      auditLocationScanner.clear();
+      auditLocationScanner=null;
+    }
+  }catch(e){}
+
+  try{
+    if(auditPalletScanner){
+      await auditPalletScanner.stop();
+      auditPalletScanner.clear();
+      auditPalletScanner=null;
+    }
+  }catch(e){}
+}
+
+function parseQRValue(value){
+
+  let text = String(value || "").trim();
+
+  try{
+    const obj = JSON.parse(text);
+    if(obj.palletId) return String(obj.palletId).trim().toUpperCase();
+    if(obj.location) return String(obj.location).trim().toUpperCase();
+  }catch(e){}
+
+  return text.toUpperCase();
+}
+
+async function loadAuditLocation(){
+
+  const location =
+    document.getElementById("auditLocation").value.trim().toUpperCase();
+
+  if(!location){
+    showMessage("Scan or enter a location.","error");
+    return;
+  }
 
   try{
 
     const data =
       await api(
-        "getDashboard"
+        "getLocationAudit",
+        {location}
       );
 
+    document.getElementById("auditSummary").innerHTML = `
+      <strong>${escapeHtml(data.location)}</strong><br>
+      Expected Pallets:
+      ${Number(data.expectedCount||0).toLocaleString()}
+      |
+      Boxes:
+      ${Number(data.expectedBoxes||0).toLocaleString()}
+      |
+      KG:
+      ${Number(data.expectedKG||0).toLocaleString()}
+    `;
 
-    document.getElementById(
-      "dPallets"
-    ).textContent =
-      Number(
-        data.totalPallets || 0
-      ).toLocaleString();
+    const tbody =
+      document.querySelector("#auditExpectedTable tbody");
 
+    tbody.innerHTML = "";
 
-    document.getElementById(
-      "dBoxes"
-    ).textContent =
-      Number(
-        data.totalBoxes || 0
-      ).toLocaleString();
+    (data.pallets || []).forEach(function(item){
 
+      const tr =
+        document.createElement("tr");
 
-    document.getElementById(
-      "dKG"
-    ).textContent =
-      Number(
-        data.totalKG || 0
-      ).toLocaleString();
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(item.palletId)}</strong></td>
+        <td>${escapeHtml(item.itemName||"-")}</td>
+        <td>${escapeHtml(item.batchId||"-")}</td>
+        <td>${escapeHtml(item.productionDate||"-")}</td>
+        <td>${escapeHtml(item.expiryDate||"-")}</td>
+        <td>${Number(item.boxes||0).toLocaleString()}</td>
+        <td>${Number(item.kg||0).toLocaleString()}</td>
+        <td><span class="badge ready">EXPECTED</span></td>
+      `;
 
+      tbody.appendChild(tr);
 
-    document.getElementById(
-      "dStatus"
-    ).textContent =
-      "LIVE";
+    });
 
+    if(!(data.pallets||[]).length){
+      tbody.innerHTML =
+        '<tr><td colspan="8">No active pallet is recorded at this location.</td></tr>';
+    }
 
-    renderMapTable(
-      "roomTable",
-      data.roomKG
-    );
+  }catch(e){}
+}
 
+async function lookupAuditPallet(palletId){
 
-    renderMapTable(
-      "productTable",
-      data.productKG
-    );
+  try{
 
+    const data =
+      await api(
+        "getPallet",
+        {palletId}
+      );
 
-    renderMapTable(
-      "storageTable",
-      data.storageKG
-    );
+    document.getElementById("auditBoxes").value =
+      data.currentBoxes || 0;
 
+    document.getElementById("auditKG").value =
+      data.currentKG || 0;
+
+    document.getElementById("auditResult").innerHTML = `
+      <strong>${escapeHtml(data.palletId)}</strong><br>
+      System Location:
+      ${escapeHtml(data.currentLocation||"-")}<br>
+      System Stock:
+      ${Number(data.currentBoxes||0).toLocaleString()} boxes /
+      ${Number(data.currentKG||0).toLocaleString()} KG
+    `;
 
   }catch(e){
 
-    document.getElementById(
-      "dStatus"
-    ).textContent =
-      "ERROR";
+    document.getElementById("auditResult").textContent =
+      "Pallet not found.";
 
   }
-
 }
 
+async function checkStockAudit(){
 
-function renderMapTable(
-  tableId,
-  object
-){
+  const auditType =
+    document.getElementById("auditType").value;
 
-  const tbody =
-    document.querySelector(
-      "#" +
-      tableId +
-      " tbody"
-    );
+  const location =
+    document.getElementById("auditLocation").value.trim().toUpperCase();
 
+  const palletId =
+    document.getElementById("auditPallet").value.trim().toUpperCase();
 
-  tbody.innerHTML =
-    "";
+  const scannedBoxes =
+    document.getElementById("auditBoxes").value;
 
+  const scannedKG =
+    document.getElementById("auditKG").value;
 
-  Object.keys(
-    object || {}
-  )
-  .sort()
-  .forEach(
-    key => {
+  const operator =
+    document.getElementById("auditOperator").value.trim();
 
-      const tr =
-        document.createElement(
-          "tr"
-        );
+  const remarks =
+    document.getElementById("auditRemarks").value.trim();
 
+  if(!location || !palletId){
+    showMessage("Location and pallet are required.","error");
+    return;
+  }
 
-      tr.innerHTML = `
+  try{
 
-        <td>
-          ${escapeHtml(key)}
-        </td>
-
-        <td>
-          ${Number(
-            object[key] || 0
-          ).toLocaleString()}
-          KG
-        </td>
-
-      `;
-
-
-      tbody.appendChild(
-        tr
+    const data =
+      await api(
+        "recordStockAudit",
+        {
+          auditType,
+          location,
+          palletId,
+          scannedBoxes,
+          scannedKG,
+          operator,
+          remarks
+        }
       );
 
-    }
-  );
+    const cls =
+      data.result === "MATCH"
+        ? "ready"
+        : "hold";
 
+    document.getElementById("auditResult").innerHTML = `
+      <strong>${escapeHtml(data.result)}</strong><br>
+      Pallet: ${escapeHtml(data.palletId)}<br>
+      Expected:
+      ${Number(data.expectedBoxes||0).toLocaleString()} boxes /
+      ${Number(data.expectedKG||0).toLocaleString()} KG<br>
+      Scanned:
+      ${Number(data.scannedBoxes||0).toLocaleString()} boxes /
+      ${Number(data.scannedKG||0).toLocaleString()} KG
+      <br>
+      <span class="badge ${cls}">${escapeHtml(data.message)}</span>
+    `;
+
+    showMessage(
+      data.message,
+      data.result === "MATCH" ? "ok" : "error"
+    );
+
+    await loadAuditLocation();
+
+  }catch(e){}
 }
 
+/* =========================================================
+   DASHBOARD
+========================================================= */
 
-function getClientStorageType(location){
-  const v = String(location || "").toUpperCase();
-  if (v.indexOf("FLOOR-") === 0) return "FLOOR";
-  if (v.indexOf("TEMP-") === 0) return "TEMP";
-  if (v.indexOf("HOLD-") === 0) return "HOLD";
-  if (v.indexOf("REPROCESS-") === 0) return "REPROCESS";
-  return "RACK";
+async function loadDashboard(){
+  try{
+    const data=await api("getDashboard");
+    document.getElementById("dPallets").textContent=Number(data.totalPallets||0).toLocaleString();
+    document.getElementById("dBoxes").textContent=Number(data.totalBoxes||0).toLocaleString();
+    document.getElementById("dKG").textContent=Number(data.totalKG||0).toLocaleString();
+    document.getElementById("dStatus").textContent="LIVE";
+    document.getElementById("dExpiring").textContent=Number(data.expiringCount||0).toLocaleString();
+    document.getElementById("dExpired").textContent=Number(data.expiredCount||0).toLocaleString();
+    renderMapTable("roomTable",data.roomKG);
+    renderMapTable("productTable",data.productKG);
+    renderMapTable("storageTable",data.storageKG);
+    renderFIFOQueue(data.fifoQueue||[]);
+  }catch(e){document.getElementById("dStatus").textContent="ERROR";}
+}
+
+function renderFIFOQueue(rows){
+  const tbody=document.querySelector("#fifoTable tbody"); if(!tbody)return; tbody.innerHTML="";
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="10">No active stock.</td></tr>';document.getElementById("fifoTopMessage").textContent="No active stock.";return;}
+  const priority=rows.filter(function(row){return row.fifoRank===1;});
+  if(priority.length){const first=priority[0];document.getElementById("fifoTopMessage").innerHTML=`<strong>FIRST FIFO PALLET</strong><br>${escapeHtml(first.itemName||"-")} | ${escapeHtml(first.palletId)}<br>Production: ${escapeHtml(first.productionDate||"-")}<br>Expiry: ${escapeHtml(first.expiryDate||"-")}<br>Location: ${escapeHtml(first.location||"-")}<br>Stock: ${Number(first.boxes||0).toLocaleString()} boxes / ${Number(first.kg||0).toLocaleString()} KG`; }
+  rows.forEach(function(item){
+    const expiryClass=item.expiryStatus==="EXPIRED"?"expired":(item.expiryStatus&&(item.expiryStatus.indexOf("EXPIRING")===0||item.expiryStatus==="EXPIRES TODAY")?"expiring":"");
+    const fifoClass=item.fifoRank===1?"fifo-priority":"";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><span class="badge ${fifoClass}">${escapeHtml(item.fifoStatus||"-")}</span></td><td>${escapeHtml(item.palletId)}</td><td>${escapeHtml(item.itemName||"-")}</td><td>${escapeHtml(item.batchId||"-")}</td><td>${escapeHtml(item.productionDate||"-")}</td><td>${escapeHtml(item.expiryDate||"-")}</td><td><span class="badge ${expiryClass}">${escapeHtml(item.expiryStatus||"NO EXPIRY")}</span></td><td>${escapeHtml(item.location||"-")}</td><td>${Number(item.boxes||0).toLocaleString()}</td><td>${Number(item.kg||0).toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 
@@ -3274,8 +3636,6 @@ window.addEventListener(
     loadDashboard();
 
     loadPalletNumbers();
-
-    loadFreeLocations();
 
     loadTransferLocations();
 
