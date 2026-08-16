@@ -3641,7 +3641,7 @@ async function approveCurrentStockAudit(){
 
 async function loadDashboard(){
   try{
-    const data=await api("summary");
+    const data=await api("getDashboard");
     document.getElementById("dPallets").textContent=Number(data.totalPallets||0).toLocaleString();
     document.getElementById("dBoxes").textContent=Number(data.totalBoxes||0).toLocaleString();
     document.getElementById("dKG").textContent=Number(data.totalKG||0).toLocaleString();
