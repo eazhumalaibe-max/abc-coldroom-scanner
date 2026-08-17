@@ -1722,7 +1722,16 @@ async function loadPalletNumbers(){
       data.nextPallet;
 
 
-  }catch(e){}
+  }catch(e){
+
+    showMessage(
+      e && e.message
+        ? e.message
+        : "Pallet number loading failed.",
+      "error"
+    );
+
+  }
 
 }
 
