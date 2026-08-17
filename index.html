@@ -1677,61 +1677,120 @@ function applyPalletNumbers(data){
 
   if(!data) return;
 
-  const select =
-    document.getElementById("palletList");
+  /*
+    PRODUCTION:
+    The actual Production page uses prodPalletQueue and prodPallet.
+    The previous version was targeting palletList, which is why the
+    API could work but the Production pallet number stayed Loading...
+  */
+  const productionQueue =
+    document.getElementById("prodPalletQueue");
 
-  if(select){
-    select.innerHTML = "";
+  if(productionQueue){
 
-    const next =
+    productionQueue.innerHTML = "";
+
+    const nextProduction =
       document.createElement("option");
 
-    next.value = data.nextPallet || "";
-    next.textContent =
-      "NEXT → " + (data.nextPallet || "");
+    nextProduction.value =
+      data.nextPallet || "";
 
-    select.appendChild(next);
+    nextProduction.textContent =
+      "NEXT → " +
+      (data.nextPallet || "");
 
-    (data.previous || []).forEach(function(id){
-      const option =
-        document.createElement("option");
+    productionQueue.appendChild(
+      nextProduction
+    );
 
-      option.value = id;
-      option.textContent = "USED → " + id;
-      select.appendChild(option);
-    });
+    (data.previous || []).forEach(
+      function(id){
+
+        const option =
+          document.createElement("option");
+
+        option.value = id;
+        option.textContent =
+          "USED → " + id;
+
+        productionQueue.appendChild(
+          option
+        );
+
+      }
+    );
+
   }
 
+  const productionPallet =
+    document.getElementById("prodPallet");
+
+  if(
+    productionPallet &&
+    data.nextPallet
+  ){
+
+    productionPallet.value =
+      data.nextPallet;
+
+  }
+
+  /*
+    INWARD:
+    Keep the already-working Inward queue exactly as it is.
+  */
   const inwardQueue =
     document.getElementById("inPalletQueue");
 
   if(inwardQueue){
+
     inwardQueue.innerHTML = "";
 
     const nextIn =
       document.createElement("option");
 
-    nextIn.value = data.nextPallet || "";
+    nextIn.value =
+      data.nextPallet || "";
+
     nextIn.textContent =
-      "NEXT → " + (data.nextPallet || "");
+      "NEXT → " +
+      (data.nextPallet || "");
 
-    inwardQueue.appendChild(nextIn);
+    inwardQueue.appendChild(
+      nextIn
+    );
 
-    (data.previous || []).forEach(function(id){
-      const option =
-        document.createElement("option");
+    (data.previous || []).forEach(
+      function(id){
 
-      option.value = id;
-      option.textContent = "USED → " + id;
-      inwardQueue.appendChild(option);
-    });
+        const option =
+          document.createElement("option");
+
+        option.value = id;
+        option.textContent =
+          "USED → " + id;
+
+        inwardQueue.appendChild(
+          option
+        );
+
+      }
+    );
+
   }
 
   const inPallet =
     document.getElementById("inPallet");
 
-  if(inPallet && data.nextPallet){
-    inPallet.value = data.nextPallet;
+  if(
+    inPallet &&
+    data.nextPallet
+  ){
+
+    inPallet.value =
+      data.nextPallet;
+
   }
 
 }
