@@ -1558,7 +1558,7 @@ function showPage(
     "production"
   ){
 
-    loadPalletNumbers();
+    loadPalletNumbers(true);
 
   }
 
@@ -1799,6 +1799,29 @@ function selectInwardPallet(value){
   if (!value) return;
   document.getElementById("inPallet").value = value;
 }
+
+/* Production pallet number: load once after the page is fully ready.
+   This fixes the case where Production is the first/initial page and
+   showPage() has not yet been triggered. */
+window.addEventListener("load", function(){
+
+  setTimeout(function(){
+
+    const production =
+      document.getElementById("production");
+
+    if(
+      production &&
+      production.classList.contains("active")
+    ){
+
+      loadPalletNumbers(true);
+
+    }
+
+  }, 300);
+
+});
 
 
 function selectPallet(
