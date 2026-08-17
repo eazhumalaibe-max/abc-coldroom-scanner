@@ -282,7 +282,7 @@ th{
   border-radius:9px;
   margin-top:5px;
   display:none;
-}
+position:relative; z-index:9999;}
 
 .search-item{
   padding:11px;
@@ -742,11 +742,6 @@ th{
             placeholder="PAL-000001"
             oninput="lookupTransferPallet()"
           >
-          <div class="actions">
-            <button class="btn blue" onclick="startTargetScanner('trPallet','trPalletReader','pallet')">📷 SCAN PALLET QR</button>
-            <button class="btn secondary" onclick="stopTargetScanner('trPalletReader')">Stop</button>
-          </div>
-          <div id="trPalletReader" style="margin-top:8px"></div>
         </div>
 
         <div>
@@ -1631,123 +1626,105 @@ async function goHomeAfterOperation(message){
    PALLET LIST
 ========================================================= */
 
-let palletNumbersCache = null;
-let palletNumbersCacheAt = 0;
-let palletNumbersRequest = null;
+async function loadPalletNumbers(){
 
-async function loadPalletNumbers(force=false){
+  try{
 
-  const now = Date.now();
-  if(!force && palletNumbersCache && (now - palletNumbersCacheAt) < 15000){
-    applyPalletNumbers(palletNumbersCache);
-    return palletNumbersCache;
-  }
+    const data =
+      await api(
+        "getPalletNumbers"
+      );
 
-  if(palletNumbersRequest){
-    return palletNumbersRequest;
-  }
 
-  palletNumbersRequest = (async function(){
-    try{
-      const data = await api("getPalletNumbers");
+    const select =
+      document.getElementById(
+        "palletList"
+      );
 
-      palletNumbersCache = data;
-      palletNumbersCacheAt = Date.now();
-      applyPalletNumbers(data);
-      return data;
 
-    }catch(e){
-      // Keep the existing screen usable even if the queue request is temporarily slow.
-      const prod = document.getElementById("prodPallet");
-      if(prod && !prod.value) prod.value = "PAL-000001";
-      throw e;
-    }finally{
-      palletNumbersRequest = null;
+    select.innerHTML =
+      "";
+
+
+    const next =
+      document.createElement(
+        "option"
+      );
+
+
+    next.value =
+      data.nextPallet;
+
+
+    next.textContent =
+      "NEXT → " +
+      data.nextPallet;
+
+
+    select.appendChild(
+      next
+    );
+
+
+    (
+      data.previous ||
+      []
+    )
+    .forEach(
+      id => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          id;
+
+
+        option.textContent =
+          "USED → " +
+          id;
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    const inwardQueue =
+      document.getElementById("inPalletQueue");
+
+    if (inwardQueue) {
+      inwardQueue.innerHTML = "";
+
+      const nextIn =
+        document.createElement("option");
+      nextIn.value = data.nextPallet;
+      nextIn.textContent = "NEXT → " + data.nextPallet;
+      inwardQueue.appendChild(nextIn);
+
+      (data.previous || []).forEach(function(id) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = "USED → " + id;
+        inwardQueue.appendChild(option);
+      });
     }
-  })();
 
-  return palletNumbersRequest;
+    document.getElementById(
+      "inPallet"
+    ).value =
+      data.nextPallet;
+
+
+  }catch(e){}
+
 }
-
-function applyPalletNumbers(data){
-
-  if(!data) return;
-
-  const next = data.nextPallet || "";
-
-  // Production: THIS was missing in the previous version.
-  const prodInput = document.getElementById("prodPallet");
-  if(prodInput && next){
-    prodInput.value = next;
-  }
-
-  const prodQueue = document.getElementById("prodPalletQueue");
-  if(prodQueue){
-    prodQueue.innerHTML = "";
-
-    const nextOpt = document.createElement("option");
-    nextOpt.value = next;
-    nextOpt.textContent = "NEXT → " + next;
-    prodQueue.appendChild(nextOpt);
-
-    (data.previous || []).forEach(function(id){
-      const option = document.createElement("option");
-      option.value = id;
-      option.textContent = "USED → " + id;
-      prodQueue.appendChild(option);
-    });
-
-    prodQueue.value = next;
-  }
-
-  const select = document.getElementById("palletList");
-  if(select){
-    select.innerHTML = "";
-
-    const nextOpt = document.createElement("option");
-    nextOpt.value = next;
-    nextOpt.textContent = "NEXT → " + next;
-    select.appendChild(nextOpt);
-
-    (data.previous || []).forEach(function(id){
-      const option = document.createElement("option");
-      option.value = id;
-      option.textContent = "USED → " + id;
-      select.appendChild(option);
-    });
-  }
-
-  const inwardQueue = document.getElementById("inPalletQueue");
-  if(inwardQueue){
-    inwardQueue.innerHTML = "";
-
-    const nextIn = document.createElement("option");
-    nextIn.value = next;
-    nextIn.textContent = "NEXT → " + next;
-    inwardQueue.appendChild(nextIn);
-
-    (data.previous || []).forEach(function(id){
-      const option = document.createElement("option");
-      option.value = id;
-      option.textContent = "USED → " + id;
-      inwardQueue.appendChild(option);
-    });
-
-    inwardQueue.value = next;
-  }
-
-  const inPallet = document.getElementById("inPallet");
-  if(inPallet && !inPallet.value){
-    inPallet.value = next;
-  }
-}
-
-function selectProductionPallet(value){
-  if(!value) return;
-  const prod = document.getElementById("prodPallet");
-  if(prod) prod.value = value;
-}
-
 
 function selectInwardPallet(value){
   if (!value) return;
@@ -1933,7 +1910,6 @@ async function startTargetScanner(targetId, readerId, mode){
         }
 
         if(mode === "pallet"){
-          if(targetId === "trPallet") await lookupTransferPallet();
           if(targetId === "outPallet") await lookupOutwardPallet();
           if(targetId === "rpPallet") await lookupReprocessPallet();
           if(targetId === "waPallet") await lookupWastagePallet();
@@ -2262,6 +2238,16 @@ function searchItems(
 
         }else if(
           type ===
+          "production"
+        ){
+
+          search =
+            document.getElementById(
+              "prodItemSearch"
+            ).value;
+
+        }else if(
+          type ===
           "masterCode"
         ){
 
@@ -2273,10 +2259,29 @@ function searchItems(
         }
 
 
-        if(
-          !search &&
-          !code
-        ){
+        search =
+          String(search || "").trim();
+
+        code =
+          String(code || "").trim();
+
+        const resultsBox =
+          document.getElementById(
+            type === "production"
+              ? "prodItemResults"
+              : type === "in"
+                ? "inItemResults"
+                : type === "master"
+                  ? "masterItemResults"
+                  : ""
+          );
+
+        if(!search && !code){
+
+          if(resultsBox){
+            resultsBox.innerHTML = "";
+            resultsBox.style.display = "none";
+          }
 
           return;
 
@@ -2285,14 +2290,58 @@ function searchItems(
 
         try{
 
-          const data =
-            await api(
-              "getItems",
-              {
-                search:search,
-                itemCode:code
-              }
-            );
+          // Production item search uses the existing Apps Script endpoint
+          // directly. This keeps the correction isolated to Production search.
+          let data;
+
+          if(type === "production"){
+            const productionUrl =
+              API_URL +
+              "?action=getItems" +
+              "&search=" +
+              encodeURIComponent(search) +
+              "&itemCode=" +
+              encodeURIComponent(code);
+
+            const response =
+              await fetch(
+                productionUrl,
+                {
+                  method:"GET",
+                  cache:"no-store"
+                }
+              );
+
+            const text =
+              await response.text();
+
+            try{
+              data = JSON.parse(text);
+            }catch(err){
+              throw new Error(
+                "Production item search API returned invalid data."
+              );
+            }
+
+            if(!data.ok){
+              throw new Error(
+                data.message ||
+                "Production item search failed."
+              );
+            }
+
+          }else{
+
+            data =
+              await api(
+                "getItems",
+                {
+                  search:search,
+                  itemCode:code
+                }
+              );
+
+          }
 
 
           if(
@@ -2318,6 +2367,20 @@ function searchItems(
               "masterItemResults",
               data.items,
               "master"
+            );
+
+          }
+
+
+          if(
+            type ===
+            "production"
+          ){
+
+            renderItemResults(
+              "prodItemResults",
+              data.items,
+              "production"
             );
 
           }
@@ -2447,6 +2510,45 @@ function renderItemResults(
             showMasterItem(
               item
             );
+
+          }
+
+
+          if(
+            type ===
+            "production"
+          ){
+
+            const codeInput =
+              document.getElementById(
+                "prodItemCode"
+              );
+
+            const nameInput =
+              document.getElementById(
+                "prodProduct"
+              );
+
+            if(codeInput){
+              codeInput.value =
+                item.itemCode || "";
+            }
+
+            if(nameInput){
+              nameInput.value =
+                item.itemName || "";
+            }
+
+            // Carry master-data box weight into production when available.
+            const bw =
+              document.getElementById(
+                "prodBoxWeight"
+              );
+
+            if(bw && item.boxWeight){
+              bw.value =
+                item.boxWeight;
+            }
 
           }
 
@@ -2705,7 +2807,7 @@ async function createProduction(){
     });
 
     showProductionQR(palletId);
-    await loadPalletNumbers(true);
+    await loadPalletNumbers();
     showMessage(data.message || "Production completed. QR generated.","ok");
   }catch(e){}
 }
