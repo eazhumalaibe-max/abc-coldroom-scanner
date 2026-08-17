@@ -1,83 +1,1595 @@
-from pathlib import Path
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABC Fruits | Inventory Management</title>
 
-src = Path("/mnt/data/ABC_Fruits_FINAL_INDEX_SCAN_TYPE_ALL_FINAL.html")
-html = src.read_text(encoding="utf-8")
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-# Add a clear "DONE" action to the Production QR result. Production needs to
-# remain visible until the QR is printed/pasted, then it should return home
-# with a clean form.
-old = '''        <div class="actions" style="justify-content:center">
-          <button class="btn" onclick="printProductionQR()">🖨️ PRINT QR LABEL</button>
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f4f7fb;
+  color:#172033;
+}
+
+header{
+  background:#0b3d2e;
+  color:white;
+  padding:16px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+
+header h1{
+  margin:0;
+  font-size:20px;
+}
+
+header small{
+  opacity:.8;
+}
+
+.container{
+  max-width:1250px;
+  margin:auto;
+  padding:18px;
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding-bottom:12px;
+}
+
+.tab{
+  border:0;
+  background:white;
+  padding:11px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  white-space:nowrap;
+  box-shadow:0 1px 5px #0001;
+}
+
+.tab.active{
+  background:#0b3d2e;
+  color:white;
+}
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.card{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 2px 10px #0000000d;
+}
+
+.card h2,
+.card h3{
+  margin-top:0;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.grid3{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  padding:11px;
+  border:1px solid #d8dee8;
+  border-radius:9px;
+  font-size:14px;
+  background:white;
+}
+
+textarea{
+  min-height:80px;
+}
+
+button{
+  border:0;
+  border-radius:9px;
+  padding:11px 16px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn{
+  background:#0b3d2e;
+  color:white;
+}
+
+.btn.secondary{
+  background:#e9eef5;
+  color:#172033;
+}
+
+.btn.danger{
+  background:#b42318;
+  color:white;
+}
+
+.btn.warning{
+  background:#b7791f;
+  color:white;
+}
+
+.btn.blue{
+  background:#1769aa;
+  color:white;
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+
+.stat{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 2px 10px #0000000d;
+}
+
+.stat .number{
+  font-size:28px;
+  font-weight:bold;
+  margin-top:8px;
+}
+
+.stat .title{
+  color:#657084;
+  font-size:13px;
+}
+
+.status{
+  padding:10px 12px;
+  border-radius:9px;
+  margin-bottom:15px;
+  display:none;
+}
+
+.status.ok{
+  display:block;
+  background:#e8f7ee;
+  color:#126b3a;
+}
+
+.status.error{
+  display:block;
+  background:#fdecec;
+  color:#a11a1a;
+}
+
+.status.info{
+  display:block;
+  background:#eaf2ff;
+  color:#1754a5;
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:750px;
+}
+
+th,
+td{
+  border-bottom:1px solid #e8edf3;
+  padding:10px;
+  text-align:left;
+  font-size:13px;
+}
+
+th{
+  background:#f7f9fc;
+  position:sticky;
+  top:0;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:20px;
+  background:#edf2f7;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.badge.ready{
+  background:#e7f7ed;
+  color:#167243;
+}
+
+.badge.partial{
+  background:#fff5dc;
+  color:#8a5a00;
+}
+
+.badge.hold{
+  background:#fde7e7;
+  color:#a71919;
+}
+
+#reader{
+  width:100%;
+  max-width:500px;
+  margin:auto;
+}
+
+.qr-result{
+  background:#f5f8fb;
+  border-radius:10px;
+  padding:12px;
+  margin-top:10px;
+}
+
+.search-results{
+  max-height:220px;
+  overflow:auto;
+  border:1px solid #dce2ea;
+  border-radius:9px;
+  margin-top:5px;
+  display:none;
+}
+
+.search-item{
+  padding:11px;
+  cursor:pointer;
+  border-bottom:1px solid #eee;
+}
+
+.search-item:hover{
+  background:#f2f7f5;
+}
+
+.muted{
+  color:#697386;
+  font-size:13px;
+}
+.fifo-priority{background:#e8f7ee;color:#126b3a;}
+.expiring{background:#fff4d6;color:#8a5a00;}
+.expired{background:#fde7e7;color:#a71919;}
+.priority-card{border-left:5px solid #0b3d2e;}
+.alert-card{border-left:5px solid #b7791f;}
+
+.full{
+  grid-column:1/-1;
+}
+
+.loading{
+  opacity:.6;
+  pointer-events:none;
+}
+
+@media(max-width:900px){
+  .grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .grid3{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px){
+  .container{
+    padding:10px;
+  }
+
+  .grid,
+  .grid2,
+  .grid3{
+    grid-template-columns:1fr;
+  }
+
+  header{
+    padding:13px;
+  }
+
+  header h1{
+    font-size:17px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>🍎 ABC Fruits Inventory</h1>
+    <small>Warehouse & Cold Room Management</small>
+  </div>
+
+  <div id="connectionStatus">
+    ● Online
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="message" class="status"></div>
+
+  <div class="tabs">
+
+    <button class="tab active" onclick="showPage('dashboard',this)">
+      📊 Dashboard
+    </button>
+
+    <button class="tab" onclick="showPage('pallet',this)">
+      📦 Pallet / QR
+    </button>
+
+    <button class="tab" onclick="showPage('production',this)">
+      🏭 Production
+    </button>
+
+    <button class="tab" onclick="showPage('inward',this)">
+      ⬇️ Inward
+    </button>
+
+    <button class="tab" onclick="showPage('transfer',this)">
+      ↔️ Transfer
+    </button>
+
+    <button class="tab" onclick="showPage('outward',this)">
+      ⬆️ Outward
+    </button>
+
+    <button class="tab" onclick="showPage('reprocess',this)">
+      ♻️ Reprocess
+    </button>
+
+    <button class="tab" onclick="showPage('wastage',this)">
+      🗑️ Wastage
+    </button>
+
+    <button class="tab" onclick="showPage('inventory',this)">
+      📋 Inventory
+    </button>
+
+    <button class="tab" onclick="showPage('itemmaster',this)">
+      🏷️ Items
+    </button>
+
+    <button class="tab" onclick="showPage('stockaudit',this)">
+      🔍 Stock Audit
+    </button>
+
+  </div>
+
+
+  <!-- =====================================================
+       DASHBOARD
+  ====================================================== -->
+
+  <section id="dashboard" class="page active">
+
+    <div class="card">
+      <h2>📊 Live Warehouse Dashboard</h2>
+      <p class="muted">Inventory is rebuilt from PALLET_MASTER. Transaction/Audit/Inventory/Dashboard sheets are system-managed.</p>
+
+      <div class="actions">
+        <button class="btn" onclick="loadDashboard()">
+          🔄 Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <div class="stat">
+        <div class="title">TOTAL PALLETS</div>
+        <div class="number" id="dPallets">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="title">TOTAL BOXES</div>
+        <div class="number" id="dBoxes">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="title">TOTAL STOCK KG</div>
+        <div class="number" id="dKG">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="title">SYSTEM STATUS</div>
+        <div class="number" id="dStatus">OK</div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <h3>Cold Room Stock</h3>
+
+      <div class="table-wrap">
+        <table id="roomTable">
+          <thead>
+            <tr>
+              <th>Cold Room</th>
+              <th>Stock KG</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Product Stock</h3>
+
+      <div class="table-wrap">
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Stock KG</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Storage Type</h3>
+      <div class="table-wrap"><table id="storageTable"><thead><tr><th>Storage Type</th><th>Stock KG</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card alert-card">
+        <h3>⏳ Expiry Watch</h3>
+        <div class="grid2">
+          <div class="stat"><div class="title">EXPIRING ≤ 7 DAYS</div><div class="number" id="dExpiring">0</div></div>
+          <div class="stat"><div class="title">EXPIRED</div><div class="number" id="dExpired">0</div></div>
         </div>
-        <div class="muted" style="text-align:center">Paste this QR on the physical pallet and send it to Inward.</div>'''
-new = '''        <div class="actions" style="justify-content:center">
+      </div>
+      <div class="card priority-card">
+        <h3>🥇 FIFO Priority</h3>
+        <p class="muted">Oldest production date first. Expiry is shown separately.</p>
+        <div id="fifoTopMessage" class="qr-result">Loading FIFO...</div>
+      </div>
+    </div>
+
+    <div class="card priority-card">
+      <h3>📦 FIFO Queue / Expiry Watch</h3>
+      <div class="table-wrap"><table id="fifoTable"><thead><tr><th>FIFO</th><th>Pallet</th><th>Item</th><th>Batch</th><th>Production Date</th><th>Expiry Date</th><th>Expiry Status</th><th>Location</th><th>Boxes</th><th>KG</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       PALLET / QR
+  ====================================================== -->
+
+  <section id="pallet" class="page">
+
+    <div class="card">
+
+      <h2>📦 Pallet & QR Scanner</h2>
+
+      <div class="grid2">
+
+        <div>
+
+          <label>Pallet ID</label>
+
+          <input
+            id="scanPallet"
+            placeholder="PAL-000001"
+            oninput="lookupPallet()"
+          >
+
+          <div class="actions">
+
+            <button class="btn" onclick="startScanner()">
+              📷 Scan QR
+            </button>
+
+            <button class="btn secondary" onclick="stopScanner()">
+              Stop
+            </button>
+
+          </div>
+
+        </div>
+
+        <div>
+
+          <label>Next / Previously Used Pallet</label>
+
+          <select id="palletList" onchange="selectPallet(this.value)">
+            <option value="">Loading...</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <div id="reader"></div>
+
+      <div id="palletResult" class="qr-result">
+        Scan or enter a pallet ID.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       PRODUCTION
+  ====================================================== -->
+
+  <section id="production" class="page">
+
+    <div class="card">
+
+      <h2>🏭 Production / Pallet QR</h2>
+      <p class="muted">Production creates the pallet and QR. Storage location is assigned by Inward.</p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Next Pallet Number</label>
+          <input id="prodPallet" placeholder="PAL-000001" readonly>
+        </div>
+
+        <div>
+          <label>Pallet Queue</label>
+          <select id="prodPalletQueue" onchange="selectProductionPallet(this.value)">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Item Search</label>
+          <input id="prodItemSearch" placeholder="Type item name or item code..." oninput="searchItems('production')">
+          <div id="prodItemResults" class="search-results"></div>
+        </div>
+
+        <div>
+          <label>Selected Item Code</label>
+          <input id="prodItemCode" readonly>
+        </div>
+
+        <div>
+          <label>Selected Item Name</label>
+          <input id="prodProduct" readonly>
+        </div>
+
+        <div>
+          <label>Batch ID *</label>
+          <input id="prodBatch" placeholder="B001">
+        </div>
+
+        <div>
+          <label>Production Date *</label>
+          <input id="prodProductionDate" type="date">
+        </div>
+
+        <div>
+          <label>Expiry Date</label>
+          <input id="prodExpiryDate" type="date">
+        </div>
+
+        <div>
+          <label>Box Weight KG *</label>
+          <input id="prodBoxWeight" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Number of Boxes *</label>
+          <input id="prodBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="prodOperator" placeholder="Production operator">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="createProduction()">✅ CREATE PALLET + GENERATE QR</button>
+        <button class="btn secondary" onclick="loadPalletNumbers()">🔄 Refresh Pallet Queue</button>
+      </div>
+
+      <div id="productionQRResult" class="qr-result" style="display:none;margin-top:15px">
+        <h3>✅ Pallet QR Generated</h3>
+        <div id="productionQRCode" style="display:flex;justify-content:center;margin:15px 0"></div>
+        <div id="productionQRText" style="text-align:center;font-weight:bold"></div>
+        <div class="actions" style="justify-content:center">
           <button class="btn" onclick="printProductionQR()">🖨️ PRINT QR LABEL</button>
           <button class="btn green" onclick="finishProduction()">✅ DONE</button>
         </div>
-        <div class="muted" style="text-align:center">Paste this QR on the physical pallet and send it to Inward.</div>'''
-if old not in html:
-    raise RuntimeError("Production QR result block not found.")
-html = html.replace(old, new, 1)
+        <div class="muted" style="text-align:center">Paste this QR on the physical pallet and send it to Inward.</div>
+      </div>
 
-# Add the production completion/reset handler immediately after printProductionQR.
-marker = '''let inwardScanner=null;'''
-fn = '''function finishProduction(){
-  const palletId =
-    document.getElementById("prodPallet")?.value || "";
+    </div>
 
-  // Clear the completed Production page first.
-  resetFormFields("production");
+  </section>
 
-  const qrResult =
-    document.getElementById("productionQRResult");
-  if(qrResult){
-    qrResult.style.display = "none";
-  }
 
-  const qr =
-    document.getElementById("productionQRCode");
-  if(qr){
-    qr.innerHTML = "";
-  }
+  <!-- =====================================================
+       INWARD
+  ====================================================== -->
 
-  const qrText =
-    document.getElementById("productionQRText");
-  if(qrText){
-    qrText.textContent = "";
-  }
+  <section id="inward" class="page">
 
-  // Return to clean Dashboard/Home after the production transaction.
-  const dashboardButton =
-    document.querySelector('.tab[onclick*="showPage(\\\\'dashboard\\\\'"]');
+    <div class="card">
 
-  showPage("dashboard", dashboardButton);
+      <h2>⬇️ Inward</h2>
+      <p class="muted">Scan Production QR → verify pallet → select free storage location → Confirm Inward.</p>
 
-  showMessage(
-    palletId
-      ? palletId + " production completed successfully."
-      : "Production completed successfully.",
-    "ok"
+      <div class="grid2">
+
+        <div>
+          <label>Pallet QR / Pallet ID</label>
+          <input id="inPallet" placeholder="PAL-000001" oninput="lookupInwardPallet()">
+          <div class="actions">
+            <button class="btn blue" onclick="startInwardScanner()">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopInwardScanner()">Stop</button>
+          </div>
+        </div>
+
+        <div>
+          <label>Storage Location *</label>
+          <input id="inLocationText" placeholder="Type location e.g. CR01-A01-01" oninput="setLocationFromText('inLocation', this.value)"> 
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('inLocationText','inLocationReader','location')">📷 SCAN LOCATION QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('inLocationReader')">Stop</button>
+          </div>
+          <div id="inLocationReader" style="margin-top:8px"></div>
+          <select id="inLocation" onchange="syncLocationText('inLocation','inLocationText')">
+            <option value="">Select Free Location</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <div id="inwardPalletInfo" class="qr-result">Scan the Production QR to load pallet details.</div>
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="inOperator" placeholder="Inward operator">
+        </div>
+
+      </div>
+
+      <div id="inwardReader" style="margin-top:15px"></div>
+
+      <div class="actions">
+        <button class="btn" onclick="confirmInward()">✅ CONFIRM INWARD</button>
+        <button class="btn secondary" onclick="loadFreeLocations()">🔄 Refresh Locations</button>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       TRANSFER
+  ====================================================== -->
+
+  <section id="transfer" class="page">
+
+    <div class="card">
+
+      <h2>↔️ Pallet Transfer</h2>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet ID</label>
+          <input
+            id="trPallet"
+            placeholder="Type Pallet ID"
+            oninput="lookupTransferPallet()"
+          >
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('trPallet','trPalletReader','transferPallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('trPalletReader')">Stop</button>
+          </div>
+          <div id="trPalletReader" style="margin-top:8px"></div>
+        </div>
+
+        <div>
+          <label>Destination Location</label>
+          <select id="trLocation" onchange="syncLocationText('trLocation','trLocationText')">
+            <option value="">Loading...</option>
+          </select>
+          <input id="trLocationText" placeholder="Type destination location" oninput="setLocationFromText('trLocation', this.value)">
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('trLocationText','trLocationReader','location')">📷 SCAN LOCATION QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('trLocationReader')">Stop</button>
+          </div>
+          <div id="trLocationReader" style="margin-top:8px"></div>
+
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="trOperator">
+        </div>
+
+        <div>
+          <label>Team</label>
+          <select id="trTeam">
+            <option value="">Select Team</option>
+            <option>Warehouse</option>
+            <option>Loading</option>
+            <option>Packing</option>
+            <option>QC</option>
+            <option>Dispatch</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Checkpoint</label>
+          <select id="trCheckpoint">
+            <option value="">Select</option>
+            <option>Cold Room</option>
+            <option>Storage</option>
+            <option>Loading</option>
+            <option>Dispatch</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div id="trInfo" class="qr-result">
+        Enter pallet ID.
+      </div>
+
+      <div class="actions">
+
+        <button class="btn" onclick="transferPallet()">
+          ↔️ Transfer
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       OUTWARD
+  ====================================================== -->
+
+  <section id="outward" class="page">
+
+    <div class="card">
+
+      <h2>⬆️ Outward / Dispatch</h2>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet ID</label>
+          <input
+            id="outPallet"
+            placeholder="PAL-000001"
+            oninput="lookupOutwardPallet()"
+          >
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('outPallet','outPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('outPalletReader')">Stop</button>
+          </div>
+          <div id="outPalletReader" style="margin-top:8px"></div>
+
+        </div>
+
+        <div>
+          <label>Dispatch No *</label>
+          <input id="outDispatch" placeholder="DISP-001">
+        </div>
+
+        <div>
+          <label>Boxes *</label>
+          <input id="outBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="outOperator">
+        </div>
+
+        <div>
+          <label>Team</label>
+          <select id="outTeam">
+            <option>Loading</option>
+            <option>Warehouse</option>
+            <option>Dispatch</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Checkpoint</label>
+          <select id="outCheckpoint">
+            <option>Loading</option>
+            <option>Dispatch</option>
+            <option>Gate</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div id="outInfo" class="qr-result">
+        Enter pallet ID.
+      </div>
+
+      <div class="actions">
+
+        <button class="btn danger" onclick="outwardPallet()">
+          ⬆️ Confirm Outward
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       REPROCESS
+  ====================================================== -->
+
+  <section id="reprocess" class="page">
+
+    <div class="card">
+
+      <h2>♻️ Reprocessing</h2>
+
+      <p class="muted">
+        Remove material for reprocessing and record good output / wastage.
+      </p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet ID</label>
+          <input
+            id="rpPallet"
+            placeholder="PAL-000001"
+            oninput="lookupReprocessPallet()"
+          >
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('rpPallet','rpPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('rpPalletReader')">Stop</button>
+          </div>
+          <div id="rpPalletReader" style="margin-top:8px"></div>
+
+        </div>
+
+        <div>
+          <label>Boxes for Reprocessing</label>
+          <input id="rpBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Good Boxes</label>
+          <input id="rpGoodBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Good KG</label>
+          <input id="rpGoodKG" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Wastage KG</label>
+          <input id="rpWasteKG" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="rpOperator">
+        </div>
+
+        <div>
+          <label>Team</label>
+          <select id="rpTeam">
+            <option>Production</option>
+            <option>Warehouse</option>
+            <option>Packing</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Checkpoint</label>
+          <select id="rpCheckpoint">
+            <option>Reprocessing</option>
+            <option>Production</option>
+            <option>QC</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Reason</label>
+          <textarea id="rpReason"></textarea>
+        </div>
+
+      </div>
+
+      <div id="rpInfo" class="qr-result">
+        Enter pallet ID.
+      </div>
+
+      <div class="actions">
+
+        <button class="btn warning" onclick="reprocessPallet()">
+          ♻️ Confirm Reprocess
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       WASTAGE
+  ====================================================== -->
+
+  <section id="wastage" class="page">
+
+    <div class="card">
+
+      <h2>🗑️ Wastage</h2>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet ID</label>
+          <input id="waPallet" placeholder="PAL-000001">
+
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('waPallet','waPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('waPalletReader')">Stop</button>
+          </div>
+          <div id="waPalletReader" style="margin-top:8px"></div>
+
+        </div>
+
+        <div>
+          <label>Wastage Boxes</label>
+          <input id="waBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Wastage KG *</label>
+          <input id="waKG" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="waOperator">
+        </div>
+
+        <div>
+          <label>Team</label>
+          <select id="waTeam">
+            <option>Warehouse</option>
+            <option>Production</option>
+            <option>Packing</option>
+            <option>QC</option>
+            <option>Dispatch</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Checkpoint</label>
+          <select id="waCheckpoint">
+            <option>Wastage</option>
+            <option>QC</option>
+            <option>Warehouse</option>
+            <option>Production</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label>Wastage Reason *</label>
+          <textarea id="waReason" placeholder="Damage / Rotten / Quality issue / etc."></textarea>
+        </div>
+
+      </div>
+
+      <div class="actions">
+
+        <button class="btn danger" onclick="recordWastage()">
+          🗑️ Record Wastage
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       INVENTORY
+  ====================================================== -->
+
+  <section id="inventory" class="page">
+
+    <div class="card">
+
+      <h2>📋 Live Inventory</h2>
+
+      <div class="grid3">
+
+        <div>
+          <label>Search</label>
+          <input
+            id="invSearch"
+            placeholder="Pallet / Item / Batch"
+            oninput="loadInventory()"
+          >
+        </div>
+
+        <div>
+          <label>Cold Room</label>
+          <select id="invRoom" onchange="loadInventory()">
+            <option value="">All Rooms</option>
+            <option>CR01</option>
+            <option>CR02</option>
+            <option>CR03</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Status</label>
+          <select id="invStatus" onchange="loadInventory()">
+            <option value="">All</option>
+            <option>READY</option>
+            <option>PARTIAL</option>
+            <option>QC HOLD</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="actions">
+
+        <button class="btn" onclick="loadInventory()">
+          🔄 Refresh Inventory
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="table-wrap">
+
+        <table id="inventoryTable">
+
+          <thead>
+
+            <tr>
+              <th>FIFO</th><th>Pallet</th><th>Item Code</th><th>Item</th><th>Batch</th><th>Production Date</th><th>Expiry Date</th><th>Expiry Status</th><th>Room</th><th>Location</th><th>Storage</th><th>Boxes</th><th>KG</th><th>Status</th>
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       ITEM MASTER
+  ====================================================== -->
+
+  <section id="itemmaster" class="page">
+
+    <div class="card">
+
+      <h2>🏷️ Item Master Search</h2>
+
+      <p class="muted">
+        100 items can be searched by Item Name or Item Code.
+      </p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Search Item</label>
+          <input
+            id="masterItemSearch"
+            placeholder="Type item name..."
+            oninput="searchItems('master')"
+          >
+
+          <div id="masterItemResults" class="search-results"></div>
+        </div>
+
+        <div>
+          <label>Item Code</label>
+          <input
+            id="masterItemCode"
+            placeholder="ITM001"
+            oninput="searchItems('masterCode')"
+          >
+        </div>
+
+      </div>
+
+      <div id="masterItemInfo" class="qr-result">
+        Search an item.
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       STOCK AUDIT
+  ====================================================== -->
+
+  <section id="stockaudit" class="page">
+
+    <div class="card">
+
+      <h2>🔍 Stock Audit</h2>
+      <p class="muted">
+        Weekly / Monthly physical stock verification.
+        Scan the location QR first, then scan each pallet QR in that location.
+      </p>
+
+      <div class="grid2">
+
+        <div>
+          <label>Audit Type</label>
+          <select id="auditType">
+            <option>WEEKLY</option>
+            <option>MONTHLY</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Operator</label>
+          <input id="auditOperator" placeholder="Auditor name">
+        </div>
+
+        <div>
+          <label>Location</label>
+          <input id="auditLocation" placeholder="CR01-A01-01">
+        </div>
+
+        <div>
+          <label>Scan Location QR</label>
+          <button class="btn blue" style="width:100%" onclick="startAuditLocationScanner()">
+            📷 SCAN LOCATION QR
+          </button>
+        </div>
+
+      </div>
+
+      <div id="auditLocationReader" style="margin-top:15px"></div>
+
+      <div class="actions">
+        <button class="btn" onclick="loadAuditLocation()">
+          📍 LOAD LOCATION STOCK
+        </button>
+        <button class="btn secondary" onclick="stopAuditScanner()">
+          Stop Scanner
+        </button>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Expected Stock at Location</h3>
+
+      <div id="auditSummary" class="qr-result">
+        Scan/select a location.
+      </div>
+
+      <div class="table-wrap">
+        <table id="auditExpectedTable">
+          <thead>
+            <tr>
+              <th>Pallet</th>
+              <th>Item</th>
+              <th>Batch</th>
+              <th>Production</th>
+              <th>Expiry</th>
+              <th>Boxes</th>
+              <th>KG</th>
+              <th>Audit</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Scan Physical Pallet</h3>
+
+      <div class="grid2">
+
+        <div>
+          <label>Pallet QR / Pallet ID</label>
+          <input id="auditPallet" placeholder="PAL-000001">
+        </div>
+
+        <div>
+          <label>Scanned Boxes</label>
+          <input id="auditBoxes" type="number">
+        </div>
+
+        <div>
+          <label>Scanned KG</label>
+          <input id="auditKG" type="number" step="0.01">
+        </div>
+
+        <div>
+          <label>Remarks</label>
+          <input id="auditRemarks" placeholder="Any physical variance">
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button class="btn blue" onclick="startAuditPalletScanner()">
+          📷 SCAN PALLET QR
+        </button>
+        <button class="btn" onclick="checkStockAudit()">
+          ✅ VERIFY PALLET
+        </button>
+      </div>
+
+      <div id="auditPalletReader" style="margin-top:15px"></div>
+
+      <div id="auditResult" class="qr-result">
+        Waiting for pallet scan.
+      </div>
+
+    </div>
+
+  </section>
+
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CONFIG
+========================================================= */
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbzgr34UdXde_Q5WClR-hz1wptyfhtBdHLPzCpOT24PZH-Qy3nkPicou40Q_CfOlU2hj/exec";
+
+
+let scanner = null;
+
+
+/* =========================================================
+   BASIC API
+========================================================= */
+
+async function api(
+  action,
+  params = {}
+){
+
+  const query =
+    new URLSearchParams();
+
+  query.set(
+    "action",
+    action
   );
 
-  loadDashboard();
+  Object.keys(params)
+    .forEach(
+      key => {
+
+        if(
+          params[key] !== undefined &&
+          params[key] !== null
+        ){
+
+          query.set(
+            key,
+            params[key]
+          );
+
+        }
+
+      }
+    );
+
+
+  const url =
+    API_URL +
+    "?" +
+    query.toString();
+
+
+  try{
+
+    const response =
+      await fetch(
+        url,
+        {
+          method:"GET",
+          cache:"no-store"
+        }
+      );
+
+
+    const text =
+      await response.text();
+
+
+    let data;
+
+
+    try{
+
+      data =
+        JSON.parse(
+          text
+        );
+
+    }catch(e){
+
+      throw new Error(
+        "Invalid API response: " +
+        text.substring(
+          0,
+          200
+        )
+      );
+
+    }
+
+
+    if(
+      !data.ok
+    ){
+
+      throw new Error(
+        data.message ||
+        "Operation failed"
+      );
+
+    }
+
+
+    return data;
+
+  }catch(error){
+
+    showMessage(
+      error.message,
+      "error"
+    );
+
+    throw error;
+
+  }
+
 }
 
 
-'''
-if "function finishProduction()" not in html:
-    idx = html.find(marker)
-    if idx < 0:
-        raise RuntimeError("Inward scanner marker not found.")
-    html = html[:idx] + fn + html[idx:]
+/* =========================================================
+   MESSAGE
+========================================================= */
 
-# Ensure the operation reset helper is robust: clear QR/result containers
-# when a page is reset, while preserving the existing working backend.
-old_reset = '''function resetFormFields(pageId){
-  const page=document.getElementById(pageId); if(!page)return;
-  page.querySelectorAll("input, textarea").forEach(function(el){if(el.type!=="button"&&el.type!=="submit")el.value="";});
-  page.querySelectorAll("select").forEach(function(el){el.selectedIndex=0;});
-}'''
-new_reset = '''function resetFormFields(pageId){
+function showMessage(
+  text,
+  type="info"
+){
+
+  const box =
+    document.getElementById(
+      "message"
+    );
+
+
+  box.textContent =
+    text;
+
+
+  box.className =
+    "status " +
+    type;
+
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+function showPage(
+  page,
+  button
+){
+
+  document
+    .querySelectorAll(
+      ".page"
+    )
+    .forEach(
+      p =>
+        p.classList.remove(
+          "active"
+        )
+    );
+
+
+  document
+    .querySelectorAll(
+      ".tab"
+    )
+    .forEach(
+      b =>
+        b.classList.remove(
+          "active"
+        )
+    );
+
+
+  document
+    .getElementById(
+      page
+    )
+    .classList.add(
+      "active"
+    );
+
+
+  if(button){
+    button.classList.add(
+      "active"
+    );
+  }
+
+
+  if(
+    page ===
+    "dashboard"
+  ){
+
+    loadDashboard();
+
+  }
+
+
+  if(
+    page ===
+    "inventory"
+  ){
+
+    loadInventory();
+
+  }
+
+
+  if(
+    page ===
+    "production"
+  ){
+
+    loadPalletNumbers();
+
+  }
+
+  if(
+    page ===
+    "inward"
+  ){
+
+    loadFreeLocations();
+
+    loadPalletNumbers();
+
+  }
+
+
+  if(
+    page ===
+    "transfer"
+  ){
+
+    loadTransferLocations();
+
+  }
+
+}
+
+
+/* =========================================================
+   HOME / OPERATION RESET
+========================================================= */
+function resetFormFields(pageId){
   const page=document.getElementById(pageId);
   if(!page) return;
 
@@ -104,14 +1616,2502 @@ new_reset = '''function resetFormFields(pageId){
       }
     }
   });
-}'''
-if old_reset in html:
-    html = html.replace(old_reset, new_reset, 1)
+}
+async function goHomeAfterOperation(message){
+  const activePage=document.querySelector(".page.active"); if(activePage)resetFormFields(activePage.id);
+  await stopScanner();
+  const dashboardButton=document.querySelector('.tab[onclick*="showPage(\'dashboard\'"]');
+  showPage("dashboard",dashboardButton);
+  showMessage(message||"Operation completed successfully.","ok");
+  await loadDashboard();
+}
 
-out = Path("/mnt/data/ABC_Fruits_FINAL_INDEX_CLEAN_AFTER_COMPLETE.html")
-out.write_text(html, encoding="utf-8")
 
-print("Created:", out)
-print("Production DONE added:", "onclick=\"finishProduction()\"" in html)
-print("Reset helper updated:", "Clear old transaction result/details" in html)
-print("Existing goHomeAfterOperation:", "goHomeAfterOperation" in html)
+/* =========================================================
+   PALLET LIST
+========================================================= */
+
+async function loadPalletNumbers(){
+
+  try{
+
+    const data =
+      await api(
+        "getPalletNumbers"
+      );
+
+
+    const select =
+      document.getElementById(
+        "palletList"
+      );
+
+    const prodQueue =
+      document.getElementById(
+        "prodPalletQueue"
+      );
+
+    const prodPallet =
+      document.getElementById(
+        "prodPallet"
+      );
+
+    if(prodPallet && data.nextPallet){
+      prodPallet.value = data.nextPallet;
+    }
+
+    if(prodQueue){
+      prodQueue.innerHTML = "";
+
+      const nextProd = document.createElement("option");
+      nextProd.value = data.nextPallet || "";
+      nextProd.textContent = "NEXT → " + (data.nextPallet || "");
+      prodQueue.appendChild(nextProd);
+
+      (data.previous || []).forEach(function(id){
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = id;
+        prodQueue.appendChild(option);
+      });
+
+      prodQueue.value = data.nextPallet || "";
+    }
+
+
+    select.innerHTML =
+      "";
+
+
+    const next =
+      document.createElement(
+        "option"
+      );
+
+
+    next.value =
+      data.nextPallet;
+
+
+    next.textContent =
+      "NEXT → " +
+      data.nextPallet;
+
+
+    select.appendChild(
+      next
+    );
+
+
+    (
+      data.previous ||
+      []
+    )
+    .forEach(
+      id => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          id;
+
+
+        option.textContent =
+          "USED → " +
+          id;
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    const inwardQueue =
+      document.getElementById("inPalletQueue");
+
+    if (inwardQueue) {
+      inwardQueue.innerHTML = "";
+
+      const nextIn =
+        document.createElement("option");
+      nextIn.value = data.nextPallet;
+      nextIn.textContent = "NEXT → " + data.nextPallet;
+      inwardQueue.appendChild(nextIn);
+
+      (data.previous || []).forEach(function(id) {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = "USED → " + id;
+        inwardQueue.appendChild(option);
+      });
+    }
+
+    document.getElementById(
+      "inPallet"
+    ).value =
+      data.nextPallet;
+
+
+  }catch(e){}
+
+}
+
+function selectInwardPallet(value){
+  if (!value) return;
+  document.getElementById("inPallet").value = value;
+}
+
+
+function selectPallet(
+  value
+){
+
+  if(!value){
+    return;
+  }
+
+
+  document.getElementById(
+    "scanPallet"
+  ).value =
+    value;
+
+
+  document.getElementById(
+    "inPallet"
+  ).value =
+    value;
+
+
+  lookupPallet();
+
+}
+
+
+/* =========================================================
+   QR SCANNER
+========================================================= */
+
+async function startScanner(){
+
+  try{
+
+    if(scanner){
+      await stopScanner();
+    }
+
+
+    scanner =
+      new Html5Qrcode(
+        "reader"
+      );
+
+
+    await scanner.start(
+
+      {
+        facingMode:
+          "environment"
+      },
+
+      {
+        fps:10,
+        qrbox:{
+          width:250,
+          height:250
+        }
+      },
+
+      qrCodeMessage => {
+
+        document.getElementById(
+          "scanPallet"
+        ).value =
+          qrCodeMessage;
+
+
+        lookupPallet();
+
+        stopScanner();
+
+      },
+
+      errorMessage => {}
+
+    );
+
+  }catch(error){
+
+    showMessage(
+      "Camera could not start. Enter Pallet ID manually.",
+      "error"
+    );
+
+  }
+
+}
+
+
+async function stopScanner(){
+
+  try{
+
+    if(scanner){
+
+      await scanner.stop();
+
+      scanner.clear();
+
+      scanner =
+        null;
+
+    }
+
+  }catch(e){}
+
+}
+
+
+
+/* =========================================================
+   UNIVERSAL SCAN + TYPE INPUT SUPPORT
+   All pallet/location entry points support both methods.
+========================================================= */
+
+let targetScanner = null;
+let targetScannerReaderId = "";
+
+function setLocationFromText(selectId, value){
+  const v = String(value || "").trim().toUpperCase();
+  const select = document.getElementById(selectId);
+  if(!select || !v) return;
+
+  let found = false;
+  for(let i=0;i<select.options.length;i++){
+    if(String(select.options[i].value).toUpperCase() === v){
+      select.value = select.options[i].value;
+      found = true;
+      break;
+    }
+  }
+
+  // Keep the typed value available even if the free-location list has not loaded.
+  if(!found){
+    let opt = Array.from(select.options).find(o => o.value === v);
+    if(!opt){
+      opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    }
+    select.value = v;
+  }
+}
+
+function syncLocationText(selectId, textId){
+  const select=document.getElementById(selectId);
+  const text=document.getElementById(textId);
+  if(select && text) text.value=select.value || "";
+}
+
+async function startTargetScanner(targetId, readerId, mode){
+  try{
+    await stopTargetScanner(readerId);
+
+    targetScannerReaderId = readerId;
+    targetScanner = new Html5Qrcode(readerId);
+
+    await targetScanner.start(
+      {facingMode:"environment"},
+      {fps:10, qrbox:{width:250,height:250}},
+      async function(decodedText){
+        const value = parseQRValue(decodedText);
+        const target = document.getElementById(targetId);
+        if(target) target.value = value;
+
+        if(mode === "location"){
+          const selectId =
+            targetId === "inLocationText" ? "inLocation" :
+            targetId === "trLocationText" ? "trLocation" : "";
+
+          if(selectId){
+            setLocationFromText(selectId, value);
+          }
+        }
+
+        if(mode === "pallet"){
+          if(targetId === "outPallet") await lookupOutwardPallet();
+          if(targetId === "rpPallet") await lookupReprocessPallet();
+          if(targetId === "waPallet") await lookupWastagePallet();
+        }
+
+        if(mode === "transferPallet"){
+          await lookupTransferPallet();
+        }
+
+        await stopTargetScanner(readerId);
+      },
+      function(){}
+    );
+
+  }catch(e){
+    showMessage(
+      (mode === "location"
+        ? "Location camera could not start. Type location manually."
+        : "Pallet camera could not start. Type pallet ID manually."),
+      "error"
+    );
+  }
+}
+
+async function stopTargetScanner(readerId){
+  try{
+    if(targetScanner && (!readerId || targetScannerReaderId === readerId)){
+      await targetScanner.stop();
+      targetScanner.clear();
+      targetScanner=null;
+      targetScannerReaderId="";
+    }
+  }catch(e){}
+}
+
+/* =========================================================
+   PALLET LOOKUP
+========================================================= */
+
+let palletLookupTimer = null;
+
+
+function lookupPallet(){
+
+  clearTimeout(
+    palletLookupTimer
+  );
+
+
+  palletLookupTimer =
+    setTimeout(
+      async function(){
+
+        const id =
+          document.getElementById(
+            "scanPallet"
+          ).value
+          .trim();
+
+
+        if(
+          !id
+        ){
+
+          document.getElementById(
+            "palletResult"
+          ).textContent =
+            "Scan or enter a pallet ID.";
+
+          return;
+
+        }
+
+
+        try{
+
+          const data =
+            await api(
+              "getPallet",
+              {
+                palletId:id
+              }
+            );
+
+
+          renderPalletResult(
+            data
+          );
+
+
+        }catch(e){
+
+          document.getElementById(
+            "palletResult"
+          ).textContent =
+            "Pallet not found.";
+
+        }
+
+      },
+      400
+    );
+
+}
+
+
+function renderPalletResult(
+  p
+){
+
+  document.getElementById(
+    "palletResult"
+  ).innerHTML = `
+
+    <strong>${p.palletId}</strong><br>
+
+    Item:
+    ${p.product || "-"}
+    ${p.itemCode ? " (" + p.itemCode + ")" : ""}
+    <br>
+
+    Batch:
+    ${p.batchId || "-"}
+    <br>
+
+    Production:
+    ${p.productionDate || "-"}
+    <br>
+
+    Expiry:
+    ${p.expiryDate || "-"}
+    <br>
+
+    Expiry Status:
+    <span class="badge ${p.expiryStatus === "EXPIRED" ? "expired" : (p.expiryStatus && (p.expiryStatus.indexOf("EXPIRING") === 0 || p.expiryStatus === "EXPIRES TODAY") ? "expiring" : "")}">
+      ${p.expiryStatus || "NO EXPIRY"}
+    </span>
+    <br>
+
+    Boxes:
+    ${p.currentBoxes || 0}
+    /
+    ${p.originalBoxes || 0}
+    <br>
+
+    KG:
+    ${p.currentKG || 0}
+    <br>
+
+    Room:
+    ${p.currentRoom || "-"}
+    <br>
+
+    Location:
+    <strong>${p.currentLocation || "-"}</strong>
+    <br>
+
+    Storage Type:
+    ${p.currentLocation ? getClientStorageType(p.currentLocation) : "-"}
+    <br>
+
+    Status:
+    <span class="badge">
+      ${p.status || "-"}
+    </span>
+
+  `;
+
+}
+
+
+/* =========================================================
+   FREE LOCATIONS
+========================================================= */
+
+async function loadFreeLocations(){
+
+  try{
+
+    const data =
+      await api(
+        "getFreeLocations"
+      );
+
+
+    const select =
+      document.getElementById(
+        "inLocation"
+      );
+
+    if(!select) return;
+
+    select.innerHTML =
+      '<option value="">Select Free Location</option>';
+
+
+    (
+      data.locations ||
+      []
+    )
+    .forEach(
+      location => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          location;
+
+
+        option.textContent =
+          location;
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+  }catch(e){}
+
+}
+
+
+async function loadTransferLocations(){
+
+  try{
+
+    const data =
+      await api(
+        "getFreeLocations"
+      );
+
+
+    const select =
+      document.getElementById(
+        "trLocation"
+      );
+
+
+    select.innerHTML =
+      '<option value="">Select Free Location</option>';
+
+
+    (
+      data.locations ||
+      []
+    )
+    .forEach(
+      location => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          location;
+
+
+        option.textContent =
+          location;
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   ITEM SEARCH
+========================================================= */
+
+let itemTimer = null;
+
+
+function searchItems(
+  type
+){
+
+  clearTimeout(
+    itemTimer
+  );
+
+
+  itemTimer =
+    setTimeout(
+      async function(){
+
+        let search = "";
+
+        let code = "";
+
+
+        if(
+          type ===
+          "in"
+        ){
+
+          search =
+            document.getElementById(
+              "inItemSearch"
+            ).value;
+
+
+        }else if(
+          type ===
+          "master"
+        ){
+
+          search =
+            document.getElementById(
+              "masterItemSearch"
+            ).value;
+
+
+        }else if(
+          type ===
+          "masterCode"
+        ){
+
+          code =
+            document.getElementById(
+              "masterItemCode"
+            ).value;
+
+        }
+
+
+        if(
+          !search &&
+          !code
+        ){
+
+          return;
+
+        }
+
+
+        try{
+
+          const data =
+            await api(
+              "getItems",
+              {
+                search:search,
+                itemCode:code
+              }
+            );
+
+
+          if(
+            type ===
+            "in"
+          ){
+
+            renderItemResults(
+              "inItemResults",
+              data.items,
+              "in"
+            );
+
+          }
+
+
+          if(
+            type ===
+            "master"
+          ){
+
+            renderItemResults(
+              "masterItemResults",
+              data.items,
+              "master"
+            );
+
+          }
+
+
+          if(
+            type ===
+            "masterCode"
+          ){
+
+            if(
+              data.items &&
+              data.items.length
+            ){
+
+              showMasterItem(
+                data.items[0]
+              );
+
+            }
+
+          }
+
+        }catch(e){}
+
+      },
+      250
+    );
+
+}
+
+
+function renderItemResults(
+  elementId,
+  items,
+  type
+){
+
+  const box =
+    document.getElementById(
+      elementId
+    );
+
+
+  box.innerHTML =
+    "";
+
+
+  if(
+    !items ||
+    !items.length
+  ){
+
+    box.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  items.forEach(
+    item => {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "search-item";
+
+
+      div.innerHTML = `
+        <strong>
+          ${escapeHtml(item.itemName)}
+        </strong>
+        <br>
+        <span class="muted">
+          ${escapeHtml(item.itemCode)}
+          |
+          ${escapeHtml(item.uom || "")}
+        </span>
+      `;
+
+
+      div.onclick =
+        function(){
+
+          if(
+            type ===
+            "in"
+          ){
+
+            document.getElementById(
+              "inItemCode"
+            ).value =
+              item.itemCode;
+
+
+            document.getElementById(
+              "inProduct"
+            ).value =
+              item.itemName;
+
+
+            if(
+              item.boxWeight
+            ){
+
+              document.getElementById(
+                "inBoxWeight"
+              ).value =
+                item.boxWeight;
+
+            }
+
+          }
+
+
+          if(
+            type ===
+            "master"
+          ){
+
+            showMasterItem(
+              item
+            );
+
+          }
+
+
+          box.style.display =
+            "none";
+
+        };
+
+
+      box.appendChild(
+        div
+      );
+
+    }
+  );
+
+
+  box.style.display =
+    "block";
+
+}
+
+
+function showMasterItem(
+  item
+){
+
+  document.getElementById(
+    "masterItemInfo"
+  ).innerHTML = `
+
+    <strong>
+      ${escapeHtml(item.itemName)}
+    </strong>
+
+    <br>
+
+    Item Code:
+    ${escapeHtml(item.itemCode)}
+
+    <br>
+
+    Category:
+    ${escapeHtml(item.category || "-")}
+
+    <br>
+
+    UOM:
+    ${escapeHtml(item.uom || "-")}
+
+    <br>
+
+    Box Weight:
+    ${item.boxWeight || 0} KG
+
+  `;
+
+}
+
+
+/* =========================================================
+   CREATE PALLET
+========================================================= */
+
+async function createPallet(){
+
+  const palletId =
+    document.getElementById("inPallet").value.trim();
+
+  const batchId =
+    document.getElementById("inBatch").value.trim();
+
+  const itemCode =
+    document.getElementById("inItemCode").value.trim();
+
+  const product =
+    document.getElementById("inProduct").value.trim();
+
+  const productionDate =
+    document.getElementById("inProductionDate").value;
+
+  const expiryDate =
+    document.getElementById("inExpiryDate").value;
+
+  const boxWeight =
+    document.getElementById("inBoxWeight").value;
+
+  const boxes =
+    document.getElementById("inBoxes").value;
+
+  const operator =
+    document.getElementById("inOperator").value;
+
+  const team =
+    document.getElementById("inTeam").value;
+
+  const checkpoint =
+    document.getElementById("inCheckpoint").value;
+
+  if(
+    !palletId ||
+    !batchId ||
+    !product ||
+    !boxWeight ||
+    !boxes ||
+    !team ||
+    !checkpoint
+  ){
+    showMessage(
+      "Please complete Pallet, Batch, Item, Dates, Box/Boxes, Team and Checkpoint.",
+      "error"
+    );
+    return;
+  }
+
+  try{
+
+    const data =
+      await api(
+        "createPallet",
+        {
+          palletId,
+          batchId,
+          product,
+          itemCode,
+          productionDate,
+          expiryDate,
+          boxWeight,
+          boxes,
+          location:"",
+          operator,
+          team,
+          checkpoint
+        }
+      );
+
+    showInwardQR(palletId, data.message || "Pallet created successfully.");
+
+    // Refresh queue without sending the user to another page.
+    await loadPalletNumbers();
+
+    // Keep the newly generated QR visible until the user prints it.
+    showMessage(
+      "Pallet created. QR generated. Paste the QR on the physical pallet.",
+      "ok"
+    );
+
+  }catch(e){}
+
+}
+
+function showInwardQR(palletId, message){
+
+  const wrap =
+    document.getElementById("inwardQRResult");
+
+  const qr =
+    document.getElementById("inwardQRCode");
+
+  const text =
+    document.getElementById("inwardQRText");
+
+  if(!wrap || !qr || !text) return;
+
+  qr.innerHTML = "";
+  text.textContent = palletId;
+
+  if(typeof QRCode !== "undefined"){
+    new QRCode(qr,{
+      text:palletId,
+      width:220,
+      height:220,
+      correctLevel:QRCode.CorrectLevel.M
+    });
+  }else{
+    qr.innerHTML =
+      "<div>QR library unavailable. Pallet ID: " +
+      escapeHtml(palletId) +
+      "</div>";
+  }
+
+  wrap.style.display = "block";
+
+  wrap.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+function printInwardQR(){
+
+  const palletId =
+    document.getElementById("inPallet").value.trim();
+
+  const qrCanvas =
+    document.querySelector("#inwardQRCode canvas");
+
+  const qrImg =
+    document.querySelector("#inwardQRCode img");
+
+  let src = "";
+
+  if(qrCanvas){
+    src = qrCanvas.toDataURL("image/png");
+  }else if(qrImg){
+    src = qrImg.src;
+  }
+
+  if(!src){
+    showMessage("QR is not ready yet.","error");
+    return;
+  }
+
+  const win =
+    window.open("","_blank","width=500,height=650");
+
+  win.document.write(`
+    <html>
+    <head><title>ABC Fruits - ${escapeHtml(palletId)}</title></head>
+    <body style="font-family:Arial;text-align:center;padding:30px">
+      <h2>🍎 ABC Fruits</h2>
+      <h3>Pallet QR</h3>
+      <img src="${src}" style="width:280px;height:280px">
+      <h2>${escapeHtml(palletId)}</h2>
+      <p>Paste this QR label on the physical pallet.</p>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+function selectProductionPallet(value){
+  const prodPallet=document.getElementById("prodPallet");
+  if(prodPallet && value){
+    prodPallet.value=value;
+  }
+}
+
+async function createProduction(){
+
+  const palletId = document.getElementById("prodPallet").value.trim();
+  const batchId = document.getElementById("prodBatch").value.trim();
+  const itemCode = document.getElementById("prodItemCode").value.trim();
+  const product = document.getElementById("prodProduct").value.trim();
+  const productionDate = document.getElementById("prodProductionDate").value;
+  const expiryDate = document.getElementById("prodExpiryDate").value;
+  const boxWeight = document.getElementById("prodBoxWeight").value;
+  const boxes = document.getElementById("prodBoxes").value;
+  const operator = document.getElementById("prodOperator").value.trim();
+
+  if(!palletId || !batchId || !product || !productionDate || !boxWeight || !boxes){
+    showMessage("Please complete Pallet, Batch, Item, Production Date, Box Weight and Boxes.","error");
+    return;
+  }
+
+  try{
+    const data = await api("production",{
+      palletId,batchId,product,itemCode,productionDate,expiryDate,boxWeight,boxes,
+      operator,team:"Production",checkpoint:"Production"
+    });
+
+    showProductionQR(palletId);
+    await loadPalletNumbers();
+    showMessage(data.message || "Production completed. QR generated.","ok");
+  }catch(e){}
+}
+
+function showProductionQR(palletId){
+
+  const wrap=document.getElementById("productionQRResult");
+  const qr=document.getElementById("productionQRCode");
+  const text=document.getElementById("productionQRText");
+  if(!wrap || !qr || !text) return;
+
+  qr.innerHTML="";
+  text.textContent=palletId;
+
+  if(typeof QRCode !== "undefined"){
+    new QRCode(qr,{text:palletId,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
+  }else{
+    qr.innerHTML="<div>QR library unavailable. Pallet ID: "+escapeHtml(palletId)+"</div>";
+  }
+
+  wrap.style.display="block";
+  wrap.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function printProductionQR(){
+
+  const palletId=document.getElementById("prodPallet").value.trim();
+  const qrCanvas=document.querySelector("#productionQRCode canvas");
+  const qrImg=document.querySelector("#productionQRCode img");
+
+  let src="";
+  if(qrCanvas) src=qrCanvas.toDataURL("image/png");
+  else if(qrImg) src=qrImg.src;
+
+  if(!src){
+    showMessage("QR is not ready yet.","error");
+    return;
+  }
+
+  const win=window.open("","_blank","width=500,height=650");
+  win.document.write(`
+    <html>
+    <head><title>ABC Fruits - ${escapeHtml(palletId)}</title></head>
+    <body style="font-family:Arial;text-align:center;padding:30px">
+      <h2>🍎 ABC Fruits</h2>
+      <h3>Pallet QR</h3>
+      <img src="${src}" style="width:280px;height:280px">
+      <h2>${escapeHtml(palletId)}</h2>
+      <p>Paste this QR label on the physical pallet.</p>
+      <script>window.onload=function(){window.print();}<\/script>
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+function finishProduction(){
+  const palletId =
+    document.getElementById("prodPallet")?.value || "";
+
+  // Clear the completed Production page first.
+  resetFormFields("production");
+
+  const qrResult =
+    document.getElementById("productionQRResult");
+  if(qrResult){
+    qrResult.style.display = "none";
+  }
+
+  const qr =
+    document.getElementById("productionQRCode");
+  if(qr){
+    qr.innerHTML = "";
+  }
+
+  const qrText =
+    document.getElementById("productionQRText");
+  if(qrText){
+    qrText.textContent = "";
+  }
+
+  // Return to clean Dashboard/Home after the production transaction.
+  const dashboardButton =
+    document.querySelector('.tab[onclick*="showPage(\\'dashboard\\'"]');
+
+  showPage("dashboard", dashboardButton);
+
+  showMessage(
+    palletId
+      ? palletId + " production completed successfully."
+      : "Production completed successfully.",
+    "ok"
+  );
+
+  loadDashboard();
+}
+
+
+let inwardScanner=null;
+
+async function startInwardScanner(){
+
+  try{
+    await stopInwardScanner();
+
+    inwardScanner=new Html5Qrcode("inwardReader");
+
+    await inwardScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+        const palletId=parseQRValue(decodedText);
+        document.getElementById("inPallet").value=palletId;
+        await lookupInwardPallet();
+        await stopInwardScanner();
+      },
+      function(){}
+    );
+
+  }catch(e){
+    showMessage("Camera could not start. Enter Pallet ID manually.","error");
+  }
+}
+
+async function stopInwardScanner(){
+  try{
+    if(inwardScanner){
+      await inwardScanner.stop();
+      inwardScanner.clear();
+      inwardScanner=null;
+    }
+  }catch(e){}
+}
+
+async function lookupInwardPallet(){
+
+  const palletId=document.getElementById("inPallet").value.trim().toUpperCase();
+  if(!palletId) return;
+
+  try{
+    const data=await api("getPallet",{palletId});
+
+    document.getElementById("inwardPalletInfo").innerHTML=`
+      <strong>${escapeHtml(data.palletId)}</strong><br>
+      Item: ${escapeHtml(data.product || "-")}<br>
+      Item Code: ${escapeHtml(data.itemCode || "-")}<br>
+      Batch: ${escapeHtml(data.batchId || "-")}<br>
+      Production: ${escapeHtml(data.productionDate || "-")}<br>
+      Expiry: ${escapeHtml(data.expiryDate || "-")}<br>
+      Stock: ${Number(data.currentBoxes || 0).toLocaleString()} boxes /
+      ${Number(data.currentKG || 0).toLocaleString()} KG<br>
+      Current Location: ${escapeHtml(data.currentLocation || "NOT IN STORAGE")}
+    `;
+
+  }catch(e){
+    document.getElementById("inwardPalletInfo").textContent="Pallet not found.";
+  }
+}
+
+async function confirmInward(){
+
+  const palletId=document.getElementById("inPallet").value.trim().toUpperCase();
+  const location=document.getElementById("inLocation").value;
+  const operator=document.getElementById("inOperator").value.trim();
+
+  if(!palletId || !location){
+    showMessage("Scan pallet QR and select a storage location.","error");
+    return;
+  }
+
+  try{
+    const data=await api("inward",{
+      palletId,
+      location,
+      operator,
+      team:"INWARD",
+      checkpoint:"INWARD"
+    });
+
+    await goHomeAfterOperation(data.message || "Inward completed successfully.");
+  }catch(e){}
+}
+
+
+
+/* =========================================================
+   TRANSFER LOOKUP
+========================================================= */
+
+let transferTimer = null;
+
+
+function lookupTransferPallet(){
+
+  clearTimeout(
+    transferTimer
+  );
+
+
+  transferTimer =
+    setTimeout(
+      async function(){
+
+        const id =
+          document.getElementById(
+            "trPallet"
+          ).value.trim();
+
+
+        if(
+          !id
+        ){
+          return;
+        }
+
+
+        try{
+
+          const data =
+            await api(
+              "getPallet",
+              {
+                palletId:id
+              }
+            );
+
+
+          document.getElementById(
+            "trInfo"
+          ).innerHTML = `
+
+            <strong>${data.palletId}</strong><br>
+
+            Item:
+            ${data.product || "-"}<br>
+
+            Batch:
+            ${data.batchId || "-"}<br>
+
+            Current:
+            ${data.currentRoom || "-"}
+            /
+            ${data.currentLocation || "-"}<br>
+
+            Stock:
+            ${data.currentBoxes || 0}
+            boxes /
+            ${data.currentKG || 0} KG
+
+          `;
+
+
+        }catch(e){
+
+          document.getElementById(
+            "trInfo"
+          ).textContent =
+            "Pallet not found.";
+
+        }
+
+      },
+      300
+    );
+
+}
+
+
+async function transferPallet(){
+
+  const palletId =
+    document.getElementById(
+      "trPallet"
+    ).value.trim();
+
+
+  const location =
+    document.getElementById(
+      "trLocation"
+    ).value;
+
+
+  const operator =
+    document.getElementById(
+      "trOperator"
+    ).value;
+
+
+  const team =
+    document.getElementById(
+      "trTeam"
+    ).value;
+
+
+  const checkpoint =
+    document.getElementById(
+      "trCheckpoint"
+    ).value;
+
+
+  if(
+    !palletId ||
+    !location
+  ){
+
+    showMessage(
+      "Pallet and destination location are required.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const data =
+      await api(
+        "transfer",
+        {
+          palletId,
+          location,
+          operator,
+          team,
+          checkpoint
+        }
+      );
+
+
+    showMessage(
+      data.message,
+      "ok"
+    );
+
+
+    document.getElementById(
+      "trInfo"
+    ).innerHTML = `
+
+      Transfer completed.<br>
+
+      ${data.palletId}<br>
+
+      ${data.fromLocation}
+      →
+      <strong>${data.toLocation}</strong>
+
+    `;
+
+
+    await goHomeAfterOperation(data.message);
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   OUTWARD LOOKUP
+========================================================= */
+
+let outwardTimer = null;
+
+
+function lookupOutwardPallet(){
+
+  clearTimeout(
+    outwardTimer
+  );
+
+
+  outwardTimer =
+    setTimeout(
+      async function(){
+
+        const id =
+          document.getElementById(
+            "outPallet"
+          ).value.trim();
+
+
+        if(
+          !id
+        ){
+          return;
+        }
+
+
+        try{
+
+          const data =
+            await api(
+              "getPallet",
+              {
+                palletId:id
+              }
+            );
+
+
+          document.getElementById(
+            "outInfo"
+          ).innerHTML = `
+
+            <strong>${data.palletId}</strong><br>
+
+            Item:
+            ${data.product || "-"}<br>
+
+            Batch:
+            ${data.batchId || "-"}<br>
+
+            Location:
+            ${data.currentLocation || "-"}<br>
+
+            Available:
+            <strong>
+              ${data.currentBoxes || 0}
+              boxes /
+              ${data.currentKG || 0} KG
+            </strong>
+
+          `;
+
+
+        }catch(e){
+
+          document.getElementById(
+            "outInfo"
+          ).textContent =
+            "Pallet not found.";
+
+        }
+
+      },
+      300
+    );
+
+}
+
+
+async function outwardPallet(){
+
+  const palletId =
+    document.getElementById(
+      "outPallet"
+    ).value.trim();
+
+
+  const boxes =
+    document.getElementById(
+      "outBoxes"
+    ).value;
+
+
+  const dispatchNo =
+    document.getElementById(
+      "outDispatch"
+    ).value.trim();
+
+
+  const operator =
+    document.getElementById(
+      "outOperator"
+    ).value;
+
+
+  const team =
+    document.getElementById(
+      "outTeam"
+    ).value;
+
+
+  const checkpoint =
+    document.getElementById(
+      "outCheckpoint"
+    ).value;
+
+
+  if(
+    !palletId ||
+    !boxes ||
+    !dispatchNo
+  ){
+
+    showMessage(
+      "Pallet, boxes and dispatch number are required.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const data =
+      await api(
+        "outward",
+        {
+          palletId,
+          boxes,
+          dispatchNo,
+          operator,
+          team,
+          checkpoint
+        }
+      );
+
+
+    showMessage(
+      data.message,
+      "ok"
+    );
+
+
+    document.getElementById(
+      "outInfo"
+    ).innerHTML = `
+
+      <strong>Outward Completed</strong><br>
+
+      Pallet:
+      ${data.palletId}<br>
+
+      Outward:
+      ${data.boxes} boxes /
+      ${data.kg} KG<br>
+
+      Remaining:
+      ${data.remainingBoxes} boxes /
+      ${data.remainingKG} KG<br>
+
+      Status:
+      ${data.status}
+
+    `;
+
+
+    await goHomeAfterOperation(data.message);
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   REPROCESS LOOKUP
+========================================================= */
+
+let reprocessTimer = null;
+
+
+function lookupReprocessPallet(){
+
+  clearTimeout(
+    reprocessTimer
+  );
+
+
+  reprocessTimer =
+    setTimeout(
+      async function(){
+
+        const id =
+          document.getElementById(
+            "rpPallet"
+          ).value.trim();
+
+
+        if(
+          !id
+        ){
+          return;
+        }
+
+
+        try{
+
+          const data =
+            await api(
+              "getPallet",
+              {
+                palletId:id
+              }
+            );
+
+
+          document.getElementById(
+            "rpInfo"
+          ).innerHTML = `
+
+            <strong>${data.palletId}</strong><br>
+
+            ${data.product || "-"}<br>
+
+            Available:
+            ${data.currentBoxes || 0}
+            boxes /
+            ${data.currentKG || 0} KG
+
+          `;
+
+
+        }catch(e){
+
+          document.getElementById(
+            "rpInfo"
+          ).textContent =
+            "Pallet not found.";
+
+        }
+
+      },
+      300
+    );
+
+}
+
+
+async function reprocessPallet(){
+
+  const palletId =
+    document.getElementById(
+      "rpPallet"
+    ).value.trim();
+
+
+  const boxes =
+    document.getElementById(
+      "rpBoxes"
+    ).value;
+
+
+  const goodBoxes =
+    document.getElementById(
+      "rpGoodBoxes"
+    ).value;
+
+
+  const goodKG =
+    document.getElementById(
+      "rpGoodKG"
+    ).value;
+
+
+  const wasteKG =
+    document.getElementById(
+      "rpWasteKG"
+    ).value;
+
+
+  const operator =
+    document.getElementById(
+      "rpOperator"
+    ).value;
+
+
+  const team =
+    document.getElementById(
+      "rpTeam"
+    ).value;
+
+
+  const checkpoint =
+    document.getElementById(
+      "rpCheckpoint"
+    ).value;
+
+
+  const reason =
+    document.getElementById(
+      "rpReason"
+    ).value;
+
+
+  if(
+    !palletId ||
+    !boxes
+  ){
+
+    showMessage(
+      "Pallet and reprocessing boxes are required.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const data =
+      await api(
+        "reprocess",
+        {
+          palletId,
+          boxes,
+          goodBoxes,
+          goodKG,
+          wasteKG,
+          operator,
+          team,
+          checkpoint,
+          reason
+        }
+      );
+
+
+    showMessage(
+      data.message,
+      "ok"
+    );
+
+
+    document.getElementById(
+      "rpInfo"
+    ).innerHTML = `
+
+      Reprocessing completed.<br>
+
+      Removed:
+      ${data.removedKG} KG<br>
+
+      Good:
+      ${data.goodBoxes} boxes /
+      ${data.goodKG} KG<br>
+
+      Wastage:
+      ${data.wasteKG} KG<br>
+
+      Remaining:
+      ${data.remainingBoxes} boxes /
+      ${data.remainingKG} KG
+
+    `;
+
+
+    await goHomeAfterOperation(data.message);
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   WASTAGE
+========================================================= */
+
+async function recordWastage(){
+
+  const palletId =
+    document.getElementById(
+      "waPallet"
+    ).value.trim();
+
+
+  const boxes =
+    document.getElementById(
+      "waBoxes"
+    ).value;
+
+
+  const kg =
+    document.getElementById(
+      "waKG"
+    ).value;
+
+
+  const reason =
+    document.getElementById(
+      "waReason"
+    ).value.trim();
+
+
+  const operator =
+    document.getElementById(
+      "waOperator"
+    ).value;
+
+
+  if(
+    !palletId ||
+    !kg ||
+    !reason
+  ){
+
+    showMessage(
+      "Pallet, KG and reason are required.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    const data =
+      await api(
+        "wastage",
+        {
+          palletId,
+          boxes,
+          kg,
+          reason,
+          operator,
+          team: document.getElementById("waTeam").value,
+          checkpoint: document.getElementById("waCheckpoint").value
+        }
+      );
+
+
+    showMessage(
+      data.message,
+      "ok"
+    );
+
+
+    await goHomeAfterOperation(data.message);
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   INVENTORY
+========================================================= */
+
+async function loadInventory(){
+
+  try{
+
+    const search =
+      document.getElementById(
+        "invSearch"
+      ).value;
+
+
+    const room =
+      document.getElementById(
+        "invRoom"
+      ).value;
+
+
+    const status =
+      document.getElementById(
+        "invStatus"
+      ).value;
+
+
+    const data =
+      await api(
+        "getInventory",
+        {
+          search,
+          room,
+          status
+        }
+      );
+
+
+    const tbody =
+      document.querySelector(
+        "#inventoryTable tbody"
+      );
+
+
+    tbody.innerHTML =
+      "";
+
+
+    (
+      data.inventory ||
+      []
+    )
+    .forEach(
+      item => {
+
+        const tr =
+          document.createElement(
+            "tr"
+          );
+
+
+        let badgeClass =
+          "";
+
+
+        if(
+          item.status ===
+          "READY"
+        ){
+
+          badgeClass =
+            "ready";
+
+        }else if(
+          item.status ===
+          "PARTIAL"
+        ){
+
+          badgeClass =
+            "partial";
+
+        }else if(
+          item.status ===
+          "QC HOLD"
+        ){
+
+          badgeClass =
+            "hold";
+
+        }
+
+
+        const expiryClass=item.expiryStatus==="EXPIRED"?"expired":(item.expiryStatus&&(item.expiryStatus.indexOf("EXPIRING")===0||item.expiryStatus==="EXPIRES TODAY")?"expiring":"");
+        const fifoClass=item.fifoStatus==="FIFO PRIORITY"?"fifo-priority":"";
+
+        tr.innerHTML = `
+          <td><span class="badge ${fifoClass}">${escapeHtml(item.fifoStatus||"-")}</span></td>
+          <td><strong>${escapeHtml(item.palletId)}</strong></td>
+          <td>${escapeHtml(item.itemCode||"-")}</td>
+          <td>${escapeHtml(item.itemName||"-")}</td>
+          <td>${escapeHtml(item.batchId||"-")}</td>
+          <td>${escapeHtml(item.productionDate||"-")}</td>
+          <td>${escapeHtml(item.expiryDate||"-")}</td>
+          <td><span class="badge ${expiryClass}">${escapeHtml(item.expiryStatus||"NO EXPIRY")}</span></td>
+          <td>${escapeHtml(item.room||"-")}</td>
+          <td><strong>${escapeHtml(item.location||"-")}</strong></td>
+          <td>${escapeHtml(item.storageType||"RACK")}</td>
+          <td>${Number(item.boxes||0).toLocaleString()}</td>
+          <td>${Number(item.kg||0).toLocaleString()}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(item.status||"-")}</span></td>
+        `;
+
+
+        tbody.appendChild(
+          tr
+        );
+
+      }
+    );
+
+
+  }catch(e){}
+
+}
+
+
+
+/* =========================================================
+   STOCK AUDIT
+========================================================= */
+
+let auditLocationScanner = null;
+let auditPalletScanner = null;
+
+async function startAuditLocationScanner(){
+
+  try{
+
+    await stopAuditScanner();
+
+    auditLocationScanner =
+      new Html5Qrcode("auditLocationReader");
+
+    await auditLocationScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+
+        const location =
+          parseQRValue(decodedText);
+
+        document.getElementById("auditLocation").value =
+          location;
+
+        await loadAuditLocation();
+        await stopAuditScanner();
+
+      },
+      function(){}
+
+    );
+
+  }catch(e){
+
+    showMessage(
+      "Location camera could not start. Enter location manually.",
+      "error"
+    );
+
+  }
+}
+
+async function startAuditPalletScanner(){
+
+  try{
+
+    await stopAuditScanner();
+
+    auditPalletScanner =
+      new Html5Qrcode("auditPalletReader");
+
+    await auditPalletScanner.start(
+      {facingMode:"environment"},
+      {fps:10,qrbox:{width:250,height:250}},
+      async function(decodedText){
+
+        const palletId =
+          parseQRValue(decodedText);
+
+        document.getElementById("auditPallet").value =
+          palletId;
+
+        await lookupAuditPallet(palletId);
+        await stopAuditScanner();
+
+      },
+      function(){}
+
+    );
+
+  }catch(e){
+
+    showMessage(
+      "Pallet camera could not start. Enter pallet ID manually.",
+      "error"
+    );
+
+  }
+}
+
+async function stopAuditScanner(){
+
+  try{
+    if(auditLocationScanner){
+      await auditLocationScanner.stop();
+      auditLocationScanner.clear();
+      auditLocationScanner=null;
+    }
+  }catch(e){}
+
+  try{
+    if(auditPalletScanner){
+      await auditPalletScanner.stop();
+      auditPalletScanner.clear();
+      auditPalletScanner=null;
+    }
+  }catch(e){}
+}
+
+function parseQRValue(value){
+
+  let text = String(value || "").trim();
+
+  try{
+    const obj = JSON.parse(text);
+    if(obj.palletId) return String(obj.palletId).trim().toUpperCase();
+    if(obj.location) return String(obj.location).trim().toUpperCase();
+  }catch(e){}
+
+  return text.toUpperCase();
+}
+
+async function loadAuditLocation(){
+
+  const location =
+    document.getElementById("auditLocation").value.trim().toUpperCase();
+
+  if(!location){
+    showMessage("Scan or enter a location.","error");
+    return;
+  }
+
+  try{
+
+    const data =
+      await api(
+        "getLocationAudit",
+        {location}
+      );
+
+    document.getElementById("auditSummary").innerHTML = `
+      <strong>${escapeHtml(data.location)}</strong><br>
+      Expected Pallets:
+      ${Number(data.expectedCount||0).toLocaleString()}
+      |
+      Boxes:
+      ${Number(data.expectedBoxes||0).toLocaleString()}
+      |
+      KG:
+      ${Number(data.expectedKG||0).toLocaleString()}
+    `;
+
+    const tbody =
+      document.querySelector("#auditExpectedTable tbody");
+
+    tbody.innerHTML = "";
+
+    (data.pallets || []).forEach(function(item){
+
+      const tr =
+        document.createElement("tr");
+
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(item.palletId)}</strong></td>
+        <td>${escapeHtml(item.itemName||"-")}</td>
+        <td>${escapeHtml(item.batchId||"-")}</td>
+        <td>${escapeHtml(item.productionDate||"-")}</td>
+        <td>${escapeHtml(item.expiryDate||"-")}</td>
+        <td>${Number(item.boxes||0).toLocaleString()}</td>
+        <td>${Number(item.kg||0).toLocaleString()}</td>
+        <td><span class="badge ready">EXPECTED</span></td>
+      `;
+
+      tbody.appendChild(tr);
+
+    });
+
+    if(!(data.pallets||[]).length){
+      tbody.innerHTML =
+        '<tr><td colspan="8">No active pallet is recorded at this location.</td></tr>';
+    }
+
+  }catch(e){}
+}
+
+async function lookupAuditPallet(palletId){
+
+  try{
+
+    const data =
+      await api(
+        "getPallet",
+        {palletId}
+      );
+
+    document.getElementById("auditBoxes").value =
+      data.currentBoxes || 0;
+
+    document.getElementById("auditKG").value =
+      data.currentKG || 0;
+
+    document.getElementById("auditResult").innerHTML = `
+      <strong>${escapeHtml(data.palletId)}</strong><br>
+      System Location:
+      ${escapeHtml(data.currentLocation||"-")}<br>
+      System Stock:
+      ${Number(data.currentBoxes||0).toLocaleString()} boxes /
+      ${Number(data.currentKG||0).toLocaleString()} KG
+    `;
+
+  }catch(e){
+
+    document.getElementById("auditResult").textContent =
+      "Pallet not found.";
+
+  }
+}
+
+async function checkStockAudit(){
+
+  const auditType =
+    document.getElementById("auditType").value;
+
+  const location =
+    document.getElementById("auditLocation").value.trim().toUpperCase();
+
+  const palletId =
+    document.getElementById("auditPallet").value.trim().toUpperCase();
+
+  const scannedBoxes =
+    document.getElementById("auditBoxes").value;
+
+  const scannedKG =
+    document.getElementById("auditKG").value;
+
+  const operator =
+    document.getElementById("auditOperator").value.trim();
+
+  const remarks =
+    document.getElementById("auditRemarks").value.trim();
+
+  if(!location || !palletId){
+    showMessage("Location and pallet are required.","error");
+    return;
+  }
+
+  try{
+
+    const data =
+      await api(
+        "recordStockAudit",
+        {
+          auditType,
+          location,
+          palletId,
+          scannedBoxes,
+          scannedKG,
+          operator,
+          remarks
+        }
+      );
+
+    const cls =
+      data.result === "MATCH"
+        ? "ready"
+        : "hold";
+
+    document.getElementById("auditResult").innerHTML = `
+      <strong>${escapeHtml(data.result)}</strong><br>
+      Pallet: ${escapeHtml(data.palletId)}<br>
+      Expected:
+      ${Number(data.expectedBoxes||0).toLocaleString()} boxes /
+      ${Number(data.expectedKG||0).toLocaleString()} KG<br>
+      Scanned:
+      ${Number(data.scannedBoxes||0).toLocaleString()} boxes /
+      ${Number(data.scannedKG||0).toLocaleString()} KG
+      <br>
+      <span class="badge ${cls}">${escapeHtml(data.message)}</span>
+    `;
+
+    showMessage(
+      data.message,
+      data.result === "MATCH" ? "ok" : "error"
+    );
+
+    await loadAuditLocation();
+
+  }catch(e){}
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+async function loadDashboard(){
+  try{
+    const data=await api("getDashboard");
+    document.getElementById("dPallets").textContent=Number(data.totalPallets||0).toLocaleString();
+    document.getElementById("dBoxes").textContent=Number(data.totalBoxes||0).toLocaleString();
+    document.getElementById("dKG").textContent=Number(data.totalKG||0).toLocaleString();
+    document.getElementById("dStatus").textContent="LIVE";
+    document.getElementById("dExpiring").textContent=Number(data.expiringCount||0).toLocaleString();
+    document.getElementById("dExpired").textContent=Number(data.expiredCount||0).toLocaleString();
+    renderMapTable("roomTable",data.roomKG);
+    renderMapTable("productTable",data.productKG);
+    renderMapTable("storageTable",data.storageKG);
+    renderFIFOQueue(data.fifoQueue||[]);
+  }catch(e){document.getElementById("dStatus").textContent="ERROR";}
+}
+
+function renderMapTable(tableId, object){
+  const tbody = document.querySelector("#" + tableId + " tbody");
+  if(!tbody) return;
+
+  tbody.innerHTML = "";
+
+  Object.keys(object || {})
+    .sort()
+    .forEach(function(key){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(key)}</td>
+        <td>${Number(object[key] || 0).toLocaleString()} KG</td>
+      `;
+      tbody.appendChild(tr);
+    });
+}
+
+function getClientStorageType(location){
+  const v = String(location || "").toUpperCase();
+  if(v.indexOf("FLOOR-") === 0) return "FLOOR";
+  if(v.indexOf("TEMP-") === 0) return "TEMP";
+  if(v.indexOf("HOLD-") === 0) return "HOLD";
+  if(v.indexOf("REPROCESS-") === 0) return "REPROCESS";
+  return "RACK";
+}
+
+function renderFIFOQueue(rows){
+  const tbody=document.querySelector("#fifoTable tbody"); if(!tbody)return; tbody.innerHTML="";
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="10">No active stock.</td></tr>';document.getElementById("fifoTopMessage").textContent="No active stock.";return;}
+  const priority=rows.filter(function(row){return row.fifoRank===1;});
+  if(priority.length){const first=priority[0];document.getElementById("fifoTopMessage").innerHTML=`<strong>FIRST FIFO PALLET</strong><br>${escapeHtml(first.itemName||"-")} | ${escapeHtml(first.palletId)}<br>Production: ${escapeHtml(first.productionDate||"-")}<br>Expiry: ${escapeHtml(first.expiryDate||"-")}<br>Location: ${escapeHtml(first.location||"-")}<br>Stock: ${Number(first.boxes||0).toLocaleString()} boxes / ${Number(first.kg||0).toLocaleString()} KG`; }
+  rows.forEach(function(item){
+    const expiryClass=item.expiryStatus==="EXPIRED"?"expired":(item.expiryStatus&&(item.expiryStatus.indexOf("EXPIRING")===0||item.expiryStatus==="EXPIRES TODAY")?"expiring":"");
+    const fifoClass=item.fifoRank===1?"fifo-priority":"";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><span class="badge ${fifoClass}">${escapeHtml(item.fifoStatus||"-")}</span></td><td>${escapeHtml(item.palletId)}</td><td>${escapeHtml(item.itemName||"-")}</td><td>${escapeHtml(item.batchId||"-")}</td><td>${escapeHtml(item.productionDate||"-")}</td><td>${escapeHtml(item.expiryDate||"-")}</td><td><span class="badge ${expiryClass}">${escapeHtml(item.expiryStatus||"NO EXPIRY")}</span></td><td>${escapeHtml(item.location||"-")}</td><td>${Number(item.boxes||0).toLocaleString()}</td><td>${Number(item.kg||0).toLocaleString()}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function escapeHtml(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
+
+window.addEventListener(
+  "load",
+  async function(){
+
+    try{
+
+      await api(
+        ""
+      );
+
+
+      document.getElementById(
+        "connectionStatus"
+      ).textContent =
+        "● Connected";
+
+
+      document.getElementById(
+        "connectionStatus"
+      ).style.color =
+        "#8ff0bd";
+
+
+    }catch(e){
+
+      document.getElementById(
+        "connectionStatus"
+      ).textContent =
+        "● API Error";
+
+    }
+
+
+    loadDashboard();
+
+    loadPalletNumbers();
+
+    loadTransferLocations();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
