@@ -739,14 +739,9 @@ th{
           <label>Pallet ID</label>
           <input
             id="trPallet"
-            placeholder="Type Pallet ID"
+            placeholder="PAL-000001"
             oninput="lookupTransferPallet()"
           >
-          <div class="actions">
-            <button class="btn blue" onclick="startTargetScanner('trPallet','trPalletReader','transferPallet')">📷 SCAN PALLET QR</button>
-            <button class="btn secondary" onclick="stopTargetScanner('trPalletReader')">Stop</button>
-          </div>
-          <div id="trPalletReader" style="margin-top:8px"></div>
         </div>
 
         <div>
@@ -1646,38 +1641,6 @@ async function loadPalletNumbers(){
         "palletList"
       );
 
-    const prodQueue =
-      document.getElementById(
-        "prodPalletQueue"
-      );
-
-    const prodPallet =
-      document.getElementById(
-        "prodPallet"
-      );
-
-    if(prodPallet && data.nextPallet){
-      prodPallet.value = data.nextPallet;
-    }
-
-    if(prodQueue){
-      prodQueue.innerHTML = "";
-
-      const nextProd = document.createElement("option");
-      nextProd.value = data.nextPallet || "";
-      nextProd.textContent = "NEXT → " + (data.nextPallet || "");
-      prodQueue.appendChild(nextProd);
-
-      (data.previous || []).forEach(function(id){
-        const option = document.createElement("option");
-        option.value = id;
-        option.textContent = id;
-        prodQueue.appendChild(option);
-      });
-
-      prodQueue.value = data.nextPallet || "";
-    }
-
 
     select.innerHTML =
       "";
@@ -1950,10 +1913,6 @@ async function startTargetScanner(targetId, readerId, mode){
           if(targetId === "outPallet") await lookupOutwardPallet();
           if(targetId === "rpPallet") await lookupReprocessPallet();
           if(targetId === "waPallet") await lookupWastagePallet();
-        }
-
-        if(mode === "transferPallet"){
-          await lookupTransferPallet();
         }
 
         await stopTargetScanner(readerId);
@@ -2696,13 +2655,6 @@ function printInwardQR(){
   `);
 
   win.document.close();
-}
-
-function selectProductionPallet(value){
-  const prodPallet=document.getElementById("prodPallet");
-  if(prodPallet && value){
-    prodPallet.value=value;
-  }
 }
 
 async function createProduction(){
