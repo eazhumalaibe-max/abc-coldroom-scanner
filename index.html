@@ -282,7 +282,7 @@ th{
   border-radius:9px;
   margin-top:5px;
   display:none;
-}
+position:relative; z-index:9999;}
 
 .search-item{
   padding:11px;
@@ -2290,14 +2290,58 @@ function searchItems(
 
         try{
 
-          const data =
-            await api(
-              "getItems",
-              {
-                search:search,
-                itemCode:code
-              }
-            );
+          // Production item search uses the existing Apps Script endpoint
+          // directly. This keeps the correction isolated to Production search.
+          let data;
+
+          if(type === "production"){
+            const productionUrl =
+              API_URL +
+              "?action=getProductionItems" +
+              "&search=" +
+              encodeURIComponent(search) +
+              "&itemCode=" +
+              encodeURIComponent(code);
+
+            const response =
+              await fetch(
+                productionUrl,
+                {
+                  method:"GET",
+                  cache:"no-store"
+                }
+              );
+
+            const text =
+              await response.text();
+
+            try{
+              data = JSON.parse(text);
+            }catch(err){
+              throw new Error(
+                "Production item search API returned invalid data."
+              );
+            }
+
+            if(!data.ok){
+              throw new Error(
+                data.message ||
+                "Production item search failed."
+              );
+            }
+
+          }else{
+
+            data =
+              await api(
+                "getItems",
+                {
+                  search:search,
+                  itemCode:code
+                }
+              );
+
+          }
 
 
           if(
@@ -2323,6 +2367,20 @@ function searchItems(
               "masterItemResults",
               data.items,
               "master"
+            );
+
+          }
+
+
+          if(
+            type ===
+            "production"
+          ){
+
+            renderItemResults(
+              "prodItemResults",
+              data.items,
+              "production"
             );
 
           }
