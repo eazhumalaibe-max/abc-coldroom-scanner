@@ -282,7 +282,7 @@ th{
   border-radius:9px;
   margin-top:5px;
   display:none;
-}
+position:relative; z-index:9999;}
 
 .search-item{
   padding:11px;
@@ -2323,6 +2323,20 @@ function searchItems(
               "masterItemResults",
               data.items,
               "master"
+            );
+
+          }
+
+
+          if(
+            type ===
+            "production"
+          ){
+
+            renderItemResults(
+              "prodItemResults",
+              data.items,
+              "production"
             );
 
           }
