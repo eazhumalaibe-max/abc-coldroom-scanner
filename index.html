@@ -1615,7 +1615,7 @@ function resetFormFields(pageId){
 async function goHomeAfterOperation(message){
   const activePage=document.querySelector(".page.active"); if(activePage)resetFormFields(activePage.id);
   await stopScanner();
-  const dashboardButton=document.querySelector('.tab[onclick*="showPage(\'dashboard\'"]');
+  const dashboardButton = document.querySelector('.tab');
   showPage("dashboard",dashboardButton);
   showMessage(message||"Operation completed successfully.","ok");
   await loadDashboard();
@@ -2764,8 +2764,7 @@ function finishProduction(){
   }
 
   // Return to clean Dashboard/Home after the production transaction.
-  const dashboardButton =
-    document.querySelector('.tab[onclick*="showPage(\\'dashboard\\'"]');
+  const dashboardButton = document.querySelector(".tab");
 
   showPage("dashboard", dashboardButton);
 
