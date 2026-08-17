@@ -742,6 +742,11 @@ position:relative; z-index:9999;}
             placeholder="PAL-000001"
             oninput="lookupTransferPallet()"
           >
+          <div class="actions">
+            <button class="btn blue" onclick="startTargetScanner('trPallet','trPalletReader','pallet')">📷 SCAN PALLET QR</button>
+            <button class="btn secondary" onclick="stopTargetScanner('trPalletReader')">Stop</button>
+          </div>
+          <div id="trPalletReader" style="margin-top:8px"></div>
         </div>
 
         <div>
@@ -1626,101 +1631,33 @@ async function goHomeAfterOperation(message){
    PALLET LIST
 ========================================================= */
 
-async function loadPalletNumbers(){
+let palletNumbersCache = null;
+let palletNumbersCacheAt = 0;
+
+async function loadPalletNumbers(forceRefresh){
 
   try{
 
-    const data =
-      await api(
-        "getPalletNumbers"
-      );
+    const now = Date.now();
 
-
-    const select =
-      document.getElementById(
-        "palletList"
-      );
-
-
-    select.innerHTML =
-      "";
-
-
-    const next =
-      document.createElement(
-        "option"
-      );
-
-
-    next.value =
-      data.nextPallet;
-
-
-    next.textContent =
-      "NEXT → " +
-      data.nextPallet;
-
-
-    select.appendChild(
-      next
-    );
-
-
-    (
-      data.previous ||
-      []
-    )
-    .forEach(
-      id => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          id;
-
-
-        option.textContent =
-          "USED → " +
-          id;
-
-
-        select.appendChild(
-          option
-        );
-
-      }
-    );
-
-
-    const inwardQueue =
-      document.getElementById("inPalletQueue");
-
-    if (inwardQueue) {
-      inwardQueue.innerHTML = "";
-
-      const nextIn =
-        document.createElement("option");
-      nextIn.value = data.nextPallet;
-      nextIn.textContent = "NEXT → " + data.nextPallet;
-      inwardQueue.appendChild(nextIn);
-
-      (data.previous || []).forEach(function(id) {
-        const option = document.createElement("option");
-        option.value = id;
-        option.textContent = "USED → " + id;
-        inwardQueue.appendChild(option);
-      });
+    if(
+      !forceRefresh &&
+      palletNumbersCache &&
+      (now - palletNumbersCacheAt) < 15000
+    ){
+      applyPalletNumbers(palletNumbersCache);
+      return palletNumbersCache;
     }
 
-    document.getElementById(
-      "inPallet"
-    ).value =
-      data.nextPallet;
+    const data =
+      await api("getPalletNumbers");
 
+    palletNumbersCache = data;
+    palletNumbersCacheAt = now;
+
+    applyPalletNumbers(data);
+
+    return data;
 
   }catch(e){
 
@@ -1731,6 +1668,70 @@ async function loadPalletNumbers(){
       "error"
     );
 
+    return null;
+  }
+
+}
+
+function applyPalletNumbers(data){
+
+  if(!data) return;
+
+  const select =
+    document.getElementById("palletList");
+
+  if(select){
+    select.innerHTML = "";
+
+    const next =
+      document.createElement("option");
+
+    next.value = data.nextPallet || "";
+    next.textContent =
+      "NEXT → " + (data.nextPallet || "");
+
+    select.appendChild(next);
+
+    (data.previous || []).forEach(function(id){
+      const option =
+        document.createElement("option");
+
+      option.value = id;
+      option.textContent = "USED → " + id;
+      select.appendChild(option);
+    });
+  }
+
+  const inwardQueue =
+    document.getElementById("inPalletQueue");
+
+  if(inwardQueue){
+    inwardQueue.innerHTML = "";
+
+    const nextIn =
+      document.createElement("option");
+
+    nextIn.value = data.nextPallet || "";
+    nextIn.textContent =
+      "NEXT → " + (data.nextPallet || "");
+
+    inwardQueue.appendChild(nextIn);
+
+    (data.previous || []).forEach(function(id){
+      const option =
+        document.createElement("option");
+
+      option.value = id;
+      option.textContent = "USED → " + id;
+      inwardQueue.appendChild(option);
+    });
+  }
+
+  const inPallet =
+    document.getElementById("inPallet");
+
+  if(inPallet && data.nextPallet){
+    inPallet.value = data.nextPallet;
   }
 
 }
@@ -1919,6 +1920,7 @@ async function startTargetScanner(targetId, readerId, mode){
         }
 
         if(mode === "pallet"){
+          if(targetId === "trPallet") await lookupTransferPallet();
           if(targetId === "outPallet") await lookupOutwardPallet();
           if(targetId === "rpPallet") await lookupReprocessPallet();
           if(targetId === "waPallet") await lookupWastagePallet();
