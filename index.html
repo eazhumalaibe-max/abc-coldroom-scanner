@@ -2301,58 +2301,18 @@ function searchItems(
 
         try{
 
-          // Production item search uses the existing Apps Script endpoint
-          // directly. This keeps the correction isolated to Production search.
-          let data;
-
-          if(type === "production"){
-            const productionUrl =
-              API_URL +
-              "?action=getProductionItems" +
-              "&search=" +
-              encodeURIComponent(search) +
-              "&itemCode=" +
-              encodeURIComponent(code);
-
-            const response =
-              await fetch(
-                productionUrl,
-                {
-                  method:"GET",
-                  cache:"no-store"
-                }
-              );
-
-            const text =
-              await response.text();
-
-            try{
-              data = JSON.parse(text);
-            }catch(err){
-              throw new Error(
-                "Production item search API returned invalid data."
-              );
-            }
-
-            if(!data.ok){
-              throw new Error(
-                data.message ||
-                "Production item search failed."
-              );
-            }
-
-          }else{
-
-            data =
-              await api(
-                "getItems",
-                {
-                  search:search,
-                  itemCode:code
-                }
-              );
-
-          }
+          // Use the same proven API wrapper as the other working modules.
+          // Do not use a separate fetch path for Production.
+          const data =
+            await api(
+              type === "production"
+                ? "getProductionItems"
+                : "getItems",
+              {
+                search:search,
+                itemCode:code
+              }
+            );
 
 
           if(
@@ -2388,11 +2348,77 @@ function searchItems(
             "production"
           ){
 
-            renderItemResults(
-              "prodItemResults",
-              data.items,
-              "production"
-            );
+            const items =
+              data.items || [];
+
+            const typed =
+              String(search || "")
+                .trim()
+                .toLowerCase();
+
+            const exact =
+              items.find(function(item){
+                return (
+                  String(item.itemName || "")
+                    .trim()
+                    .toLowerCase() === typed ||
+                  String(item.itemCode || "")
+                    .trim()
+                    .toLowerCase() === typed
+                );
+              });
+
+            // If the search identifies one exact item, fill the
+            // Production fields immediately. Otherwise show the list.
+            if(
+              exact ||
+              items.length === 1
+            ){
+
+              const item =
+                exact || items[0];
+
+              const codeInput =
+                document.getElementById("prodItemCode");
+
+              const nameInput =
+                document.getElementById("prodProduct");
+
+              const weightInput =
+                document.getElementById("prodBoxWeight");
+
+              if(codeInput)
+                codeInput.value =
+                  item.itemCode || "";
+
+              if(nameInput)
+                nameInput.value =
+                  item.itemName || "";
+
+              if(
+                weightInput &&
+                item.boxWeight
+              )
+                weightInput.value =
+                  item.boxWeight;
+
+              const box =
+                document.getElementById("prodItemResults");
+
+              if(box){
+                box.innerHTML = "";
+                box.style.display = "none";
+              }
+
+            }else{
+
+              renderItemResults(
+                "prodItemResults",
+                items,
+                "production"
+              );
+
+            }
 
           }
 
@@ -2415,7 +2441,18 @@ function searchItems(
 
           }
 
-        }catch(e){}
+        }catch(e){
+
+          if(type === "production"){
+            showMessage(
+              e && e.message
+                ? e.message
+                : "Production item search failed.",
+              "error"
+            );
+          }
+
+        }
 
       },
       250
